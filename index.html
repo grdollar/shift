@@ -133,10 +133,11 @@ function go(){
   const poolSeen=new Set();
   const poolR=DATA.filter(r=>{
     if(!POOL.has(r.Site.trim()))return false;
-    if(siteIds.has(r['Employee ID']))return false;
+    if(siteIds.has(r["Employee ID"]))return false;
     if(poolSeen.has(r['Employee ID']))return false;
     poolSeen.add(r['Employee ID']);
-    return true;
+    const d=dst(r.City,sc);
+    return d===null||d<=100;
   });
   const all=[...siteR,...poolR];
   const dnr=siteR.filter(r=>r.DNR);
