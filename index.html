@@ -69,11 +69,11 @@ select:disabled{opacity:.45;cursor:not-allowed}
 <div class="card">
   <div class="st">Shift details</div>
   <div class="r2">
-    <div class="fg"><label>Site</label><select id="ss" onchange="onS()"><option value="">&#8212; select site &#8212;</option></select></div>
+    <div class="fg"><label>Site</label><select id="ss" onchange="onS()"><option value="">— select site —</option></select></div>
     <div class="fg"><label>Date</label><input type="date" id="dt"/></div>
   </div>
   <div class="r2">
-    <div class="fg"><label>Who called in sick</label><select id="as" disabled><option value="">&#8212; select site first &#8212;</option></select></div>
+    <div class="fg"><label>Who called in sick</label><select id="as" disabled><option value="">— select site first —</option></select></div>
     <div class="fg"><label>Role being filled</label><select id="rf"><option value="any">Any role</option><option value="supervisor">Supervisor</option><option value="officer">Security Officer</option></select></div>
   </div>
   <div class="fg sp"><label>Shift requires</label><div class="tr"><div class="tg" id="tl" onclick="tR('lock')">Lock site</div><div class="tg" id="tu" onclick="tR('unlock')">Unlock site</div></div></div>
@@ -105,9 +105,9 @@ SN.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=
 function onS(){
   const s=ss.value,el=document.getElementById('as');
   el.innerHTML='';
-  if(!s){el.disabled=true;el.innerHTML='<option value="">&#8212; select site first &#8212;</option>';document.getElementById('rs').style.display='none';return;}
+  if(!s){el.disabled=true;el.innerHTML='<option value="">— select site first —</option>';document.getElementById('rs').style.display='none';return;}
   el.disabled=false;
-  const n=document.createElement('option');n.value='';n.textContent='&#8212; nobody (shift unfilled) &#8212;';el.appendChild(n);
+  const n=document.createElement('option');n.value='';n.textContent='— nobody (shift unfilled) —';el.appendChild(n);
   const seen=new Set();
   DATA.filter(r=>r.Site.trim()===s&&r.Name&&r.Name.trim())
     .sort((a,b)=>a.Name.localeCompare(b.Name))
@@ -122,7 +122,7 @@ function render(e,sc){
   const sorted=srt==='d'?[...e].sort((a,b)=>{const da=dst(a.City,sc)??9999,db=dst(b.City,sc)??9999;return da-db;}):[...e].sort((a,b)=>cs2(a.Classification)-cs2(b.Classification));
   document.getElementById('cl').innerHTML=sorted.length===0?'<div class="empty">No eligible staff match these requirements.</div>':sorted.map((r,i)=>{
     const d=dst(r.City,sc),fl=POOL.has(r.Site.trim());
-    return '<div class="cd"><div class="av '+av(r.Classification.trim())+'">'+ini(r.Name)+'</div><div class="ci"><div class="cn">'+r.Name+'</div><div class="cm">'+r.Role+' &middot; '+r.City+'</div><div class="bs">'+cb(r.Classification)+dBadge(d)+(fl?'<span class="b bfl">Floater</span>':'')+(r.Lock?'<span class="b bl">Lock</span>':'')+(r.Unlock?'<span class="b bu">Unlock</span>':'')+(r.Comments?'<span class="b bn">'+r.Comments+'</span>':'')+'</div><div class="cr">'+(r.PhoneTel?'<a href="tel:'+r.PhoneTel+'">'+r.PhoneDisplay+'</a>':'<span style="font-size:13px;color:var(--tx2)">'+(r.PhoneDisplay||'&#8212;')+'</span>')+'<span class="cs">&middot;</span><a href="mailto:'+r.Email+'">'+r.Email+'</a></div></div><div class="rk">#'+(i+1)+'</div></div>';
+    return '<div class="cd"><div class="av '+av(r.Classification.trim())+'">'+ini(r.Name)+'</div><div class="ci"><div class="cn">'+r.Name+'</div><div class="cm">'+r.Role+' &middot; '+r.City+'</div><div class="bs">'+cb(r.Classification)+dBadge(d)+(fl?'<span class="b bfl">Floater</span>':'')+(r.Lock?'<span class="b bl">Lock</span>':'')+(r.Unlock?'<span class="b bu">Unlock</span>':'')+(r.Comments?'<span class="b bn">'+r.Comments+'</span>':'')+'</div><div class="cr">'+(r.PhoneTel?'<a href="tel:'+r.PhoneTel+'">'+r.PhoneDisplay+'</a>':'<span style="font-size:13px;color:var(--tx2)">'+(r.PhoneDisplay||'—')+'</span>')+'<span class="cs">&middot;</span><a href="mailto:'+r.Email+'">'+r.Email+'</a></div></div><div class="rk">#'+(i+1)+'</div></div>';
   }).join('');
 }
 function go(){
@@ -154,7 +154,7 @@ function go(){
   const rs=document.getElementById('rs');rs.style.display='block';
   document.getElementById('rc').textContent=lE.length+' found';
   render(lE,sc);
-  document.getElementById('db').innerHTML=dnr.length?'<div class="ds"><div class="dt">DNR &#8212; do not contact ('+dnr.length+')</div>'+dnr.map(r=>'<div class="dc"><span class="dn">'+r.Name+'</span><span style="margin-left:8px">'+(r.Comments||'')+'</span></div>').join('')+'</div>':'';
+  document.getElementById('db').innerHTML=dnr.length?'<div class="ds"><div class="dt">DNR — do not contact ('+dnr.length+')</div>'+dnr.map(r=>'<div class="dc"><span class="dn">'+r.Name+'</span><span style="margin-left:8px">'+(r.Comments||'')+'</span></div>').join('')+'</div>':'';
   rs.scrollIntoView({behavior:'smooth',block:'start'});
 }
 document.getElementById('dt').valueAsDate=new Date();
