@@ -16,7 +16,6 @@ h1{font-size:22px;font-weight:600;margin-bottom:4px}
 .st{font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
-.fg:last-child{margin-bottom:0}
 .fg label{font-size:12px;color:var(--tx2);font-weight:500}
 select,input[type=date]{width:100%;padding:8px 10px;font-size:14px;font-family:var(--fn);border:.5px solid var(--brm);border-radius:var(--rm);background:var(--bg);color:var(--tx);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6b68' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer}
 select:focus,input:focus{outline:none;border-color:var(--bri);box-shadow:0 0 0 3px rgba(12,68,124,.08)}
@@ -28,9 +27,9 @@ select:disabled{opacity:.45;cursor:not-allowed}
 .tg.wn{background:var(--bgw);border-color:var(--brw);color:var(--txw);font-weight:500}
 .btn{width:100%;padding:11px;font-size:15px;font-weight:500;font-family:var(--fn);border:.5px solid var(--brm);border-radius:var(--rm);cursor:pointer;background:var(--bg);color:var(--tx);transition:all .12s;margin-top:4px}
 .btn:hover{background:var(--bg2)}.btn:active{transform:scale(.99)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
 .loading{text-align:center;padding:2rem;color:var(--tx2);font-size:14px}
-.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--br);border-top-color:var(--txi);border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--br);border-top-color:var(--txi);border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 .rh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
 .rc{font-size:13px;color:var(--tx2)}
@@ -49,18 +48,17 @@ select:disabled{opacity:.45;cursor:not-allowed}
 .bs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
 .b{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:500}
 .bl{background:#e1f5ee;color:#085041}.bu{background:#e6f1fb;color:#0c447c}
-.bft{background:#eaf3de;color:#27500a}.bpt{background:#faeeda;color:#633806}.bca{background:#eeedfe;color:#3c3489}
 .bsup{background:#fff3cd;color:#856404}
 .bn{background:var(--bg2);color:var(--tx2)}
 .bd{background:var(--bg2);color:var(--tx2)}
 .bd.nr{background:#eaf3de;color:#27500a}.bd.md{background:#faeeda;color:#633806}.bd.fr{background:#fcebeb;color:#a32d2d}
-@media(prefers-color-scheme:dark){.bl{background:#04342c;color:#9fe1cb}.bu{background:#042c53;color:#b5d4f4}.bft{background:#173404;color:#c0dd97}.bpt{background:#412402;color:#fac775}.bca{background:#26215c;color:#afa9ec}.bd.nr{background:#173404;color:#c0dd97}.bd.md{background:#412402;color:#fac775}.bd.fr{background:#3d1111;color:#f09595}}
+@media(prefers-color-scheme:dark){.bl{background:#04342c;color:#9fe1cb}.bu{background:#042c53;color:#b5d4f4}.bsup{background:#3d3200;color:#ffc}.bd.nr{background:#173404;color:#c0dd97}.bd.md{background:#412402;color:#fac775}.bd.fr{background:#3d1111;color:#f09595}}
 .cr{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .cr a{font-size:13px;color:var(--txi);text-decoration:none}.cr a:hover{text-decoration:underline}
 .cs{font-size:12px;color:var(--tx3)}
 .rk{font-size:11px;padding:3px 8px;border-radius:var(--rm);background:var(--bg2);color:var(--tx2);font-weight:600;flex-shrink:0;align-self:center}
 .empty{text-align:center;padding:2.5rem;color:var(--tx2);font-size:14px}
-.err{background:var(--bgd);border:.5px solid var(--txd);border-radius:var(--rm);padding:12px;color:var(--txd);font-size:13px;margin-bottom:1rem}
+.err{background:var(--bgd);border:.5px solid rgba(163,45,45,.3);border-radius:var(--rm);padding:12px;color:var(--txd);font-size:13px;margin-bottom:1rem}
 .ds{margin-top:14px;padding-top:14px;border-top:.5px solid var(--br)}
 .dt{font-size:11px;color:var(--txd);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
 .dc{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;color:var(--tx2);border-bottom:.5px solid var(--br)}
@@ -74,23 +72,27 @@ select:disabled{opacity:.45;cursor:not-allowed}
 <h1>Shift fill tool</h1>
 <p class="sub">Find available staff to cover an open shift</p>
 
-<div id="err-banner" class="err" style="display:none"></div>
+<div id="err-banner" style="display:none" class="err"></div>
 
 <div class="card">
   <div class="st">Shift details</div>
   <div class="r2">
     <div class="fg">
       <label>Site</label>
-      <select id="sel-site" onchange="onSiteChange()"><option value="">— loading sites —</option></select>
+      <select id="sel-site" onchange="onSiteOrDateChange()">
+        <option value="">— loading sites —</option>
+      </select>
     </div>
     <div class="fg">
       <label>Date</label>
-      <input type="date" id="sel-date"/>
+      <input type="date" id="sel-date" onchange="onSiteOrDateChange()"/>
     </div>
   </div>
   <div class="fg">
     <label>Who called in sick</label>
-    <select id="sel-absent" disabled><option value="">— select site first —</option></select>
+    <select id="sel-absent" disabled>
+      <option value="">— select site and date first —</option>
+    </select>
   </div>
   <div class="fg">
     <label>Shift requires</label>
@@ -127,9 +129,8 @@ const req = {lock:false,unlock:false};
 let srt = 'd';
 let lastCandidates = [];
 let lastSite = null;
-let siteStaffCache = {};
+let loadingAbsent = false;
 
-// Haversine distance
 function dist(city, siteXRef) {
   const sc = SITE_COORDS[siteXRef];
   if (!sc) return null;
@@ -163,13 +164,6 @@ function showError(msg) {
   el.style.display = msg ? 'block' : 'none';
 }
 
-function setLoading(msg) {
-  document.getElementById('rs').style.display = 'block';
-  document.getElementById('cl').innerHTML = `<div class="loading"><span class="spinner"></span>${msg}</div>`;
-  document.getElementById('db').innerHTML = '';
-  document.getElementById('rc').textContent = '';
-}
-
 function tog(k) {
   req[k] = !req[k];
   document.getElementById(k==='lock'?'tl':'tu').classList.toggle('wn', req[k]);
@@ -182,7 +176,6 @@ function setSort(s) {
   if (lastCandidates.length) renderCandidates(lastCandidates, lastSite);
 }
 
-// Load sites on startup
 async function loadSites() {
   try {
     const r = await fetch(`${SERVER}/sites`);
@@ -196,54 +189,66 @@ async function loadSites() {
       sel.appendChild(o);
     });
   } catch(e) {
-    showError('Could not load sites from server. Is the server running?');
+    showError('Could not load sites. Is the server running?');
   }
 }
 
-// When site changes, load staff for that site
-async function onSiteChange() {
+// Triggered when either site or date changes
+async function onSiteOrDateChange() {
   const site = document.getElementById('sel-site').value;
-  const absSel = document.getElementById('absent-sel') || document.getElementById('sel-absent');
-  absSel.innerHTML = '<option value="">— loading staff —</option>';
+  const date = document.getElementById('sel-date').value;
+  const absSel = document.getElementById('sel-absent');
+
+  // Reset state
+  absSel.innerHTML = '<option value="">— select site and date first —</option>';
   absSel.disabled = true;
   document.getElementById('find-btn').disabled = true;
   document.getElementById('rs').style.display = 'none';
   showError('');
 
-  if (!site) {
-    absSel.innerHTML = '<option value="">— select site first —</option>';
-    return;
-  }
+  if (!site || !date) return;
+
+  // Load scheduled staff for this site+date
+  loadingAbsent = true;
+  absSel.innerHTML = '<option value="">— loading scheduled staff —</option>';
 
   try {
-    // Use cache if available
-    if (!siteStaffCache[site]) {
-      const r = await fetch(`${SERVER}/sitestaff?site=${encodeURIComponent(site)}`);
-      const data = await r.json();
-      if (data.error) throw new Error(data.error);
-      siteStaffCache[site] = data.employees || [];
+    const r = await fetch(`${SERVER}/scheduled?site=${encodeURIComponent(site)}&date=${encodeURIComponent(date)}`);
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+
+    const staff = data.employees || [];
+    absSel.innerHTML = '';
+
+    if (staff.length === 0) {
+      absSel.innerHTML = '<option value="">— no staff scheduled this day —</option>';
+      absSel.disabled = true;
+      // Still allow finding candidates even if no one called in sick
+      document.getElementById('find-btn').disabled = false;
+      return;
     }
 
-    const staff = siteStaffCache[site];
-    absSel.innerHTML = '<option value="">— nobody (shift unfilled) —</option>';
+    const none = document.createElement('option');
+    none.value = '';
+    none.textContent = '— nobody (shift unfilled) —';
+    absSel.appendChild(none);
+
     staff.forEach(emp => {
       const o = document.createElement('option');
       o.value = emp.employeeNumber;
-      o.dataset.job = (emp.workAssignments.find(wa => wa.locationXRefCode === siteLocXRef(site)) || {}).jobXRefCode || '';
+      o.dataset.job = emp.empJobAtSite || '';
       o.textContent = emp.displayName + (emp.empJobNameAtSite ? ` — ${emp.empJobNameAtSite}` : '');
       absSel.appendChild(o);
     });
+
     absSel.disabled = false;
     document.getElementById('find-btn').disabled = false;
   } catch(e) {
-    showError('Failed to load staff for site: ' + e.message);
-    absSel.innerHTML = '<option value="">— error loading staff —</option>';
+    showError('Failed to load scheduled staff: ' + e.message);
+    absSel.innerHTML = '<option value="">— error —</option>';
+  } finally {
+    loadingAbsent = false;
   }
-}
-
-// Map org unit xrefcode to SEC_ location xrefcode
-function siteLocXRef(site) {
-  return 'SEC_' + site;
 }
 
 async function findCandidates() {
@@ -251,22 +256,19 @@ async function findCandidates() {
   const date = document.getElementById('sel-date').value;
   const absSel = document.getElementById('sel-absent');
   const absentXRefCode = absSel.value;
+  const jobXRefCode = absSel.selectedOptions[0] && absSel.selectedOptions[0].dataset.job || '';
 
   if (!site || !date) { showError('Please select a site and date.'); return; }
 
-  // Get job of absent employee
-  let jobXRefCode = '';
-  if (absentXRefCode) {
-    const opt = absSel.querySelector(`option[value="${absentXRefCode}"]`);
-    if (opt) jobXRefCode = opt.dataset.job || '';
-  }
-
   showError('');
-  setLoading('Checking Dayforce schedules and availability…');
+  document.getElementById('rs').style.display = 'block';
+  document.getElementById('cl').innerHTML = '<div class="loading"><span class="spinner"></span>Checking schedules and availability in Dayforce…</div>';
+  document.getElementById('db').innerHTML = '';
+  document.getElementById('rc').textContent = '';
   document.getElementById('find-btn').disabled = true;
 
   try {
-    let url = `${SERVER}/candidates?site=${encodeURIComponent(site)}&date=${date}`;
+    let url = `${SERVER}/candidates?site=${encodeURIComponent(site)}&date=${encodeURIComponent(date)}`;
     if (absentXRefCode) url += `&absentXRefCode=${encodeURIComponent(absentXRefCode)}`;
     if (jobXRefCode) url += `&jobXRefCode=${encodeURIComponent(jobXRefCode)}`;
 
@@ -274,13 +276,13 @@ async function findCandidates() {
     const data = await r.json();
     if (data.error) throw new Error(data.error);
 
-    // Merge spreadsheet data (lock/unlock/dnr/comments)
+    // Merge spreadsheet lock/unlock/dnr/comments
     const merged = (data.candidates || []).map(emp => {
-      const lookup = STAFF_LOOKUP[emp.employeeNumber] || {};
-      return { ...emp, lock: lookup.lock || false, unlock: lookup.unlock || false, dnr: lookup.dnr || false, comments: lookup.comments || '' };
+      const lu = STAFF_LOOKUP[emp.employeeNumber] || {};
+      return { ...emp, lock: lu.lock||false, unlock: lu.unlock||false, dnr: lu.dnr||false, comments: lu.comments||'' };
     });
 
-    // Apply lock/unlock/dnr filters
+    // Apply lock/unlock/dnr client-side filters
     const filtered = merged.filter(emp => {
       if (emp.dnr) return false;
       if (req.lock && !emp.lock) return false;
@@ -288,12 +290,8 @@ async function findCandidates() {
       return true;
     });
 
-    // DNR list (from this site's staff only)
-    const allSiteStaff = siteStaffCache[site] || [];
-    const dnrList = allSiteStaff.filter(emp => {
-      const lu = STAFF_LOOKUP[emp.employeeNumber] || {};
-      return lu.dnr;
-    });
+    // Build DNR list from candidates returned by server
+    const dnrList = merged.filter(emp => emp.dnr);
 
     lastCandidates = filtered;
     lastSite = site;
@@ -301,16 +299,14 @@ async function findCandidates() {
     document.getElementById('rc').textContent = filtered.length + ' found';
     renderCandidates(filtered, site);
 
-    // DNR block
-    document.getElementById('db').innerHTML = dnrList.length ?
-      `<div class="ds"><div class="dt">DNR — do not contact (${dnrList.length})</div>` +
-      dnrList.map(e => {
-        const lu = STAFF_LOOKUP[e.employeeNumber] || {};
-        return `<div class="dc"><span class="dn">${e.displayName}</span><span style="margin-left:8px;font-size:11px">${lu.comments||''}</span></div>`;
-      }).join('') + '</div>' : '';
+    document.getElementById('db').innerHTML = dnrList.length
+      ? `<div class="ds"><div class="dt">DNR — do not contact (${dnrList.length})</div>` +
+        dnrList.map(e => `<div class="dc"><span class="dn">${e.displayName}</span><span style="margin-left:8px;font-size:11px">${e.comments||''}</span></div>`).join('') +
+        '</div>'
+      : '';
 
   } catch(e) {
-    showError('Error finding candidates: ' + e.message);
+    showError('Error: ' + e.message);
     document.getElementById('rs').style.display = 'none';
   } finally {
     document.getElementById('find-btn').disabled = false;
@@ -321,49 +317,49 @@ function renderCandidates(candidates, site) {
   const sorted = [...candidates].sort((a,b) => {
     if (srt === 'd') {
       const da = dist(a.city, site) ?? 9999;
-      const db = dist(b.city, site) ?? 9999;
-      if (Math.abs(da-db) > 0.5) return da - db;
+      const db2 = dist(b.city, site) ?? 9999;
+      if (Math.abs(da-db2) > 0.5) return da - db2;
     }
-    // Job match sort (exact first, supervisor covering second)
     const jo = {exact:0, supervisor_covering:1};
     const jd = (jo[a.jobMatch]??2) - (jo[b.jobMatch]??2);
     if (jd !== 0) return jd;
     return (a.displayName||'').localeCompare(b.displayName||'');
   });
 
-  const locXRef = siteLocXRef(site);
+  if (sorted.length === 0) {
+    document.getElementById('cl').innerHTML = '<div class="empty">No available staff match these requirements.</div>';
+    return;
+  }
 
-  document.getElementById('cl').innerHTML = sorted.length === 0
-    ? '<div class="empty">No available staff match these requirements.</div>'
-    : sorted.map((emp, i) => {
-        const d = dist(emp.city, site);
-        const lu = STAFF_LOOKUP[emp.employeeNumber] || {};
-        const isSup = emp.jobMatch === 'supervisor_covering';
-        const phone = emp.phone ? emp.phone.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3') : null;
-        const telNum = emp.phone ? '+61' + emp.phone.replace(/^0/, '') : null;
-        return `<div class="cd">
-          <div class="av ${avatarClass(emp.empJobAtSite)}">${ini(emp.displayName)}</div>
-          <div class="ci">
-            <div class="cn">${emp.displayName}</div>
-            <div class="cm">${emp.empJobNameAtSite || 'Unknown role'} &middot; ${emp.city || 'Unknown suburb'}</div>
-            <div class="bs">
-              ${distBadge(d)}
-              ${isSup ? '<span class="b bsup">Supervisor covering</span>' : ''}
-              ${lu.lock ? '<span class="b bl">Lock</span>' : ''}
-              ${lu.unlock ? '<span class="b bu">Unlock</span>' : ''}
-              ${lu.comments ? `<span class="b bn">${lu.comments}</span>` : ''}
-            </div>
-            <div class="cr">
-              ${phone && telNum ? `<a href="tel:${telNum}">${phone}</a>` : '<span style="font-size:13px;color:var(--tx2)">No phone</span>'}
-              ${phone ? '<span class="cs">&middot;</span>' : ''}
-            </div>
-          </div>
-          <div class="rk">#${i+1}</div>
-        </div>`;
-      }).join('');
+  document.getElementById('cl').innerHTML = sorted.map((emp, i) => {
+    const d = dist(emp.city, site);
+    const lu = STAFF_LOOKUP[emp.employeeNumber] || {};
+    const isSup = emp.jobMatch === 'supervisor_covering';
+    const rawPhone = emp.phone || '';
+    const digits = rawPhone.replace(/\D/g, '');
+    const phone = digits.length >= 9 ? '0' + digits.slice(-9).replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3') : rawPhone || null;
+    const telNum = digits.length >= 9 ? '+61' + digits.slice(-9) : null;
+    return `<div class="cd">
+      <div class="av ${avatarClass(emp.empJobAtSite)}">${ini(emp.displayName)}</div>
+      <div class="ci">
+        <div class="cn">${emp.displayName}</div>
+        <div class="cm">${emp.empJobNameAtSite || 'Unknown role'} &middot; ${emp.city || 'Unknown suburb'}</div>
+        <div class="bs">
+          ${distBadge(d)}
+          ${isSup ? '<span class="b bsup">Supervisor covering</span>' : ''}
+          ${lu.lock ? '<span class="b bl">Lock</span>' : ''}
+          ${lu.unlock ? '<span class="b bu">Unlock</span>' : ''}
+          ${lu.comments ? `<span class="b bn">${lu.comments}</span>` : ''}
+        </div>
+        <div class="cr">
+          ${phone && telNum ? `<a href="tel:${telNum}">${phone}</a>` : '<span style="color:var(--tx3);font-size:13px">No phone</span>'}
+        </div>
+      </div>
+      <div class="rk">#${i+1}</div>
+    </div>`;
+  }).join('');
 }
 
-// Init
 document.getElementById('sel-date').valueAsDate = new Date();
 loadSites();
 </script>
