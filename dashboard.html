@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trident Operations Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f0f0e;--bg2:#1a1a18;--bg3:#242422;--bg4:#2e2e2b;--tx:#e8e8e4;--tx2:#9b9b98;--tx3:#6b6b68;--txi:#85b7eb;--txs:#c0dd97;--txw:#fac775;--txd:#f09595;--br:rgba(255,255,255,.08);--brm:rgba(255,255,255,.14);--bri:rgba(133,183,235,.3);--brs:rgba(192,221,151,.3);--rm:8px;--rl:12px;--fn:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+body{font-family:var(--fn);background:var(--bg);color:var(--tx);min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--bg2);border-bottom:.5px solid var(--br);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.logo{font-size:16px;font-weight:600;color:var(--tx)}
+.status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tx2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--tx3);flex-shrink:0}
+.dot.live{background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.5)}
+.dot.err{background:var(--txd)}
+.main{display:grid;grid-template-columns:380px 1fr;flex:1;overflow:hidden;height:calc(100vh - 57px)}
+.sidebar{background:var(--bg2);border-right:.5px solid var(--br);overflow-y:auto;display:flex;flex-direction:column}
+.sidebar-hdr{padding:.875rem 1rem;border-bottom:.5px solid var(--br);font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;justify-content:space-between}
+.badge{background:var(--bg4);color:var(--tx2);font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+.badge.new{background:rgba(133,183,235,.15);color:var(--txi)}
+.absence-list{flex:1;overflow-y:auto}
+.absence-item{padding:.875rem 1rem;border-bottom:.5px solid var(--br);cursor:pointer;transition:background .1s}
+.absence-item:hover{background:var(--bg3)}
+.absence-item.active{background:var(--bg3);border-left:2px solid var(--txi)}
+.absence-item.new-flash{animation:flash .6s ease}
+@keyframes flash{0%{background:rgba(133,183,235,.2)}100%{background:transparent}}
+.ai-name{font-size:14px;font-weight:500;color:var(--tx);margin-bottom:2px}
+.ai-meta{font-size:12px;color:var(--tx2)}
+.ai-time{font-size:11px;color:var(--tx3);margin-top:4px}
+.detail{overflow-y:auto;padding:1.5rem;background:var(--bg)}
+.empty-detail{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--tx3);font-size:14px;gap:8px}
+.empty-detail svg{opacity:.3}
+.section{margin-bottom:1.5rem}
+.sec-title{font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.info-card{background:var(--bg2);border:.5px solid var(--br);border-radius:var(--rm);padding:.875rem}
+.info-label{font-size:11px;color:var(--tx3);margin-bottom:4px}
+.info-value{font-size:14px;font-weight:500;color:var(--tx)}
+.info-value a{color:var(--txi);text-decoration:none}
+.info-value a:hover{text-decoration:underline}
+.cand-list{display:flex;flex-direction:column;gap:8px}
+.cand{background:var(--bg2);border:.5px solid var(--br);border-radius:var(--rm);padding:.875rem;display:flex;align-items:flex-start;gap:12px}
+.av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;background:var(--bg4);color:var(--tx2)}
+.av.s{background:rgba(12,68,124,.4);color:#85b7eb}
+.av.l2{background:rgba(39,80,10,.4);color:#c0dd97}
+.av.l1{background:rgba(61,34,4,.4);color:#fac775}
+.ci{flex:1;min-width:0}
+.cn{font-size:13px;font-weight:500;color:var(--tx);margin-bottom:2px}
+.cm{font-size:12px;color:var(--tx2);margin-bottom:6px}
+.tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{font-size:11px;padding:2px 7px;border-radius:5px;font-weight:500}
+.tag-dist-nr{background:rgba(39,80,10,.3);color:#c0dd97}
+.tag-dist-md{background:rgba(61,34,4,.3);color:#fac775}
+.tag-dist-fr{background:rgba(61,17,17,.3);color:#f09595}
+.tag-dist-uk{background:var(--bg4);color:var(--tx3)}
+.tag-sup{background:rgba(133,106,4,.3);color:#ffd666}
+.tag-lock{background:rgba(4,52,44,.4);color:#9fe1cb}
+.tag-unlock{background:rgba(4,44,83,.4);color:#b5d4f4}
+.rk{font-size:11px;font-weight:700;color:var(--tx3);flex-shrink:0;align-self:center;min-width:28px;text-align:right}
+.call-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--rm);border:.5px solid var(--bri);background:rgba(133,183,235,.08);color:var(--txi);font-size:12px;font-family:var(--fn);cursor:pointer;margin-top:8px;transition:all .1s}
+.call-btn:hover{background:rgba(133,183,235,.15)}
+.no-cands{background:var(--bg2);border:.5px solid var(--br);border-radius:var(--rm);padding:1.5rem;text-align:center;color:var(--tx3);font-size:13px}
+.timestamp-big{font-size:22px;font-weight:600;color:var(--tx);margin-bottom:4px}
+.site-big{font-size:15px;color:var(--txi);margin-bottom:.5rem}
+.job-tag{display:inline-block;font-size:12px;padding:3px 10px;border-radius:20px;background:rgba(133,183,235,.12);color:var(--txi);margin-bottom:1rem}
+@media(max-width:768px){.main{grid-template-columns:1fr;grid-template-rows:auto 1fr}.sidebar{max-height:280px}.detail{min-height:400px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Trident Operations Centre</div>
+  <div class="status">
+    <div class="dot" id="status-dot"></div>
+    <span id="status-text">Connecting…</span>
+  </div>
+</header>
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-hdr">
+      <span>Absences today</span>
+      <span class="badge" id="absence-count">0</span>
+    </div>
+    <div class="absence-list" id="absence-list">
+      <div style="padding:2rem 1rem;text-align:center;color:var(--tx3);font-size:13px">No absences reported yet</div>
+    </div>
+  </div>
+  <div class="detail" id="detail">
+    <div class="empty-detail">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Select an absence to view details</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const SERVER = 'https://shift-server-okhl.onrender.com';
+const STAFF_LOOKUP = {};  // Will be populated from server if needed
+
+// Known suburb coords for distance
+const SITE_COORDS = {"AUSTRALIA_FAIR_SECURITY":[-27.9739,153.3988],"ASPLEY_HYPERMARKET_SECURITY":[-27.3583,153.0197],"BROOKSIDE_SHOPPING_CENTRE_SECURITY":[-27.4275,152.9594],"CALAMVALE_CENTRAL_SECURITY":[-27.6011,153.0294],"CANNON_HILL_KMART_PLAZA_SECURITY":[-27.4744,153.1025],"CAPALABA_CENTRAL_SECURITY":[-27.5275,153.2017],"CAPALABA_PARK_SHOPPING_CENTRE_SECURITY":[-27.5306,153.2011],"CLEVELAND_CENTRAL_SECURITY":[-27.5264,153.2653],"LOGAN_CENTRAL_PLAZA_SECURITY":[-27.6394,153.1033],"MARGATE_VILLAGE_SHOPPING_CENTRE_SECURITY":[-27.2525,153.1011],"MORAYFIELD_SHOPPING_CENTRE_SECURITY":[-27.1086,152.9528],"NEWMARKET_VILLAGE_SECURITY":[-27.4353,152.9997],"ORION_SPRINGFIELD_CENTRAL_SECURITY":[-27.6672,152.9094],"PENINSULA_FAIR_SHOPPING_CENTRE_SECURITY":[-27.2142,153.1336],"RIVERLINK_SHOPPING_CENTRE_SECURITY":[-27.6158,152.7561],"SMITH_COLLECTIVE_SECURITY":[-27.9731,153.4275],"SUNNYBANK_HILLS_SHOPPINGTOWN_SECURITY":[-27.5883,153.0544],"SUNNYBANK_PLAZA_SECURITY":[-27.5797,153.0611],"SUNNY_PARK_SHOPPING_CENTRE_SECURITY":[-27.5856,153.1075],"TOOWONG_VILLAGE_SECURITY":[-27.4856,152.9839],"VICTORIA_POINT_SHOPPING_CENTRE_SECURITY":[-27.5831,153.3119],"WYNNUM_PLAZA_SECURITY":[-27.4547,153.1647],"SOUTH_BANK_PARKLANDS_SECURITY":[-27.4778,153.0194],"ROMA_STREET_PARKLANDS_SECURITY":[-27.4647,153.0236]};
+const SUBURBS = {"Southport":[-27.9697,153.3988],"Surfers Paradise":[-27.9988,153.4278],"Gold Coast":[-28.0167,153.4],"Paradise Point":[-27.8833,153.3833],"Runaway Bay":[-27.9167,153.3833],"Biggera Waters":[-27.9333,153.3833],"Helensvale":[-27.9167,153.35],"Oxenford":[-27.9,153.3333],"Arundel":[-27.9275,153.3694],"Coombabah":[-27.9011,153.3608],"Mermaid Waters":[-28.0358,153.4175],"Coomera":[-27.8128,153.3183],"Upper Coomera":[-27.8211,153.3056],"Pimpama":[-27.8261,153.3144],"Ormeau":[-27.7667,153.3],"Yatala":[-27.75,153.2333],"Eagleby":[-27.7119,153.2483],"Beenleigh":[-27.7153,153.1994],"Robina":[-28.0761,153.3822],"Nerang":[-27.9833,153.35],"Carrara":[-28.0167,153.3833],"Varsity Lakes":[-28.0833,153.4],"Burleigh Heads":[-28.0981,153.4428],"Miami":[-28.0833,153.4333],"Elanora":[-28.1,153.45],"Palm Beach":[-28.1167,153.4667],"Rochedale":[-27.5744,153.1517],"Daisy Hill":[-27.6419,153.18],"Acacia Ridge":[-27.5783,153.0183],"Algester":[-27.6019,153.0408],"Calamvale":[-27.6011,153.0294],"Runcorn":[-27.6022,153.065],"Sunnybank Hills":[-27.5883,153.0544],"Eight Mile Plains":[-27.5894,153.1003],"Woodridge":[-27.6333,153.1167],"Logan Central":[-27.6394,153.1033],"Loganholme":[-27.6869,153.1847],"Holmview":[-27.7242,153.1908],"Tanah Merah":[-27.6833,153.2],"Cornubia":[-27.6667,153.2167],"Capalaba":[-27.5275,153.2017],"Alexandra Hills":[-27.5647,153.22],"Thornlands":[-27.5883,153.2747],"Victoria Point":[-27.5831,153.3119],"Redland Bay":[-27.6744,153.3019],"Cleveland":[-27.5264,153.2653],"Wellington Point":[-27.5333,153.2333],"Brisbane":[-27.4678,153.0278],"Aspley":[-27.3583,153.0197],"Fitzgibbon":[-27.3358,153.0408],"Zillmere":[-27.3539,153.0425],"Chermside":[-27.3883,153.0322],"Nundah":[-27.4,153.0583],"Toowong":[-27.485,152.9794],"Indooroopilly":[-27.5006,152.9742],"Kenmore":[-27.5167,152.9333],"Morayfield":[-27.1086,152.9528],"Caboolture":[-27.0661,152.9514],"Narangba":[-27.2072,152.9747],"North Lakes":[-27.2431,153.0219],"Kallangur":[-27.2628,152.9881],"Strathpine":[-27.2972,152.9894],"Margate":[-27.2525,153.1011],"Kippa-Ring":[-27.2083,153.1167],"Ipswich":[-27.6158,152.7619],"Goodna":[-27.6097,152.8994],"Springfield Lakes":[-27.6711,152.9194],"Redbank Plains":[-27.6561,152.8617],"Orion":[-27.6672,152.9094],"Riverlink":[-27.6158,152.7561]};
+
+let absences = [];
+let selectedId = null;
+
+function dist(city, siteXRef) {
+  const sc = SITE_COORDS[siteXRef];
+  if (!sc || !city) return null;
+  const sub = SUBURBS[city] || SUBURBS[city.trim()];
+  if (!sub) return null;
+  const R=6371, dlat=(sub[0]-sc[0])*Math.PI/180, dlon=(sub[1]-sc[1])*Math.PI/180;
+  const a=Math.sin(dlat/2)**2+Math.cos(sc[0]*Math.PI/180)*Math.cos(sub[0]*Math.PI/180)*Math.sin(dlon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function ini(n) { return (n||'').split(' ').filter(Boolean).map(w=>w[0]).join('').substring(0,2).toUpperCase(); }
+
+function avatarClass(jobXRef) {
+  if (!jobXRef) return '';
+  const j = jobXRef.toLowerCase();
+  if (j.includes('supervisor')) return 's';
+  if (j.includes('level_2') || j.includes('level 2')) return 'l2';
+  return 'l1';
+}
+
+function timeAgo(iso) {
+  const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  return `${Math.floor(diff/3600)}h ago`;
+}
+
+function formatTime(iso) {
+  return new Date(iso).toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
+}
+
+function formatPhone(p) {
+  if (!p) return null;
+  const d = p.replace(/\D/g,'');
+  if (d.length >= 9) return '0' + d.slice(-9).replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
+  return p;
+}
+
+function renderSidebar() {
+  const list = document.getElementById('absence-list');
+  const count = document.getElementById('absence-count');
+  count.textContent = absences.length;
+  count.className = 'badge' + (absences.length > 0 ? ' new' : '');
+
+  if (absences.length === 0) {
+    list.innerHTML = '<div style="padding:2rem 1rem;text-align:center;color:var(--tx3);font-size:13px">No absences reported yet</div>';
+    return;
+  }
+
+  list.innerHTML = absences.map(a => `
+    <div class="absence-item${a.id === selectedId ? ' active' : ''}" onclick="selectAbsence('${a.id}')">
+      <div class="ai-name">${a.displayName}</div>
+      <div class="ai-meta">${a.siteName || 'Unknown site'} &middot; ${a.jobName || 'Unknown role'}</div>
+      <div class="ai-time">${formatTime(a.timestamp)} &middot; ${a.candidates ? a.candidates.length + ' candidates' : 'loading…'}</div>
+    </div>
+  `).join('');
+}
+
+function selectAbsence(id) {
+  selectedId = id;
+  renderSidebar();
+  const absence = absences.find(a => a.id === id);
+  if (!absence) return;
+  renderDetail(absence);
+}
+
+function renderDetail(absence) {
+  const detail = document.getElementById('detail');
+  const phone = formatPhone(absence.phone);
+  const telNum = absence.phone ? '+61' + absence.phone.replace(/\D/g,'').replace(/^0/,'') : null;
+
+  const cands = (absence.candidates || []).sort((a,b) => {
+    const da = dist(a.city, absence.site) ?? 9999;
+    const db = dist(b.city, absence.site) ?? 9999;
+    return da - db;
+  });
+
+  detail.innerHTML = `
+    <div class="section">
+      <div class="timestamp-big">${formatTime(absence.timestamp)}</div>
+      <div class="site-big">${absence.siteName || 'Unknown site'}</div>
+      ${absence.jobName ? `<div class="job-tag">${absence.jobName}</div>` : ''}
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Employee</div>
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-label">Name</div>
+          <div class="info-value">${absence.displayName}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">Phone</div>
+          <div class="info-value">${phone && telNum ? `<a href="tel:${telNum}">${phone}</a>` : '—'}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">Suburb</div>
+          <div class="info-value">${absence.city || '—'}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">Date</div>
+          <div class="info-value">${absence.date}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Available candidates (${cands.length})</div>
+      ${cands.length === 0
+        ? '<div class="no-cands">No available candidates found for this shift</div>'
+        : `<div class="cand-list">${cands.map((c, i) => {
+            const d = dist(c.city, absence.site);
+            const dk = d === null ? 'uk' : d < 10 ? 'nr' : d < 30 ? 'md' : 'fr';
+            const dLabel = d === null ? '? km' : d.toFixed(1) + ' km';
+            const phone = formatPhone(c.phone);
+            const telNum = c.phone ? '+61' + c.phone.replace(/\D/g,'').replace(/^0/,'') : null;
+            const isSup = c.empJobAtSite && c.empJobAtSite.toLowerCase().includes('supervisor');
+            const lu = STAFF_LOOKUP[c.employeeNumber] || {};
+            return `<div class="cand">
+              <div class="av ${avatarClass(c.empJobAtSite)}">${ini(c.displayName)}</div>
+              <div class="ci">
+                <div class="cn">${c.displayName}</div>
+                <div class="cm">${c.empJobNameAtSite || 'Unknown role'} &middot; ${c.city || '?'}</div>
+                <div class="tags">
+                  <span class="tag tag-dist-${dk}">${dLabel}</span>
+                  ${isSup ? '<span class="tag tag-sup">Supervisor covering</span>' : ''}
+                  ${lu.lock ? '<span class="tag tag-lock">Lock</span>' : ''}
+                  ${lu.unlock ? '<span class="tag tag-unlock">Unlock</span>' : ''}
+                </div>
+                ${phone && telNum ? `<a href="tel:${telNum}" class="call-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> ${phone}</a>` : ''}
+              </div>
+              <div class="rk">#${i+1}</div>
+            </div>`;
+          }).join('')}</div>`
+      }
+    </div>
+  `;
+}
+
+// SSE connection
+function connectSSE() {
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+
+  const es = new EventSource(`${SERVER}/dashboard/events`);
+
+  es.onopen = () => {
+    dot.className = 'dot live';
+    txt.textContent = 'Live';
+  };
+
+  es.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'absence') {
+        // Check if we already have this absence
+        const existing = absences.findIndex(a => a.id === msg.absence.id);
+        if (existing >= 0) {
+          absences[existing] = msg.absence;
+        } else {
+          absences.unshift(msg.absence);
+          // Flash the new item
+          setTimeout(() => {
+            const items = document.querySelectorAll('.absence-item');
+            if (items[0]) items[0].classList.add('new-flash');
+          }, 50);
+        }
+        renderSidebar();
+        // Auto-select if nothing selected
+        if (!selectedId && absences.length > 0) {
+          selectAbsence(absences[0].id);
+        } else if (selectedId === msg.absence.id) {
+          renderDetail(msg.absence);
+        }
+      }
+    } catch (e) {}
+  };
+
+  es.onerror = () => {
+    dot.className = 'dot err';
+    txt.textContent = 'Reconnecting…';
+    es.close();
+    setTimeout(connectSSE, 5000);
+  };
+}
+
+// Load existing absences on startup
+async function loadAbsences() {
+  try {
+    const r = await fetch(`${SERVER}/dashboard/absences`);
+    const data = await r.json();
+    absences = data.absences || [];
+    renderSidebar();
+    if (absences.length > 0) selectAbsence(absences[0].id);
+  } catch (e) {}
+}
+
+loadAbsences();
+connectSSE();
+
+// Refresh time-ago labels every minute
+setInterval(renderSidebar, 60000);
+</script>
+</body>
+</html>
