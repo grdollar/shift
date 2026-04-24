@@ -134,7 +134,8 @@ let loadingAbsent = false;
 function dist(city, siteXRef) {
   const sc = SITE_COORDS[siteXRef];
   if (!sc) return null;
-  const sub = SUBURBS[city] || SUBURBS[(city||'').trim()];
+  const cityKey = (city||'').trim();
+  const sub = SUBURBS[cityKey] || Object.entries(SUBURBS).find(([k]) => k.toLowerCase() === cityKey.toLowerCase())?.[1];
   if (!sub) return null;
   const R=6371, dlat=(sub[0]-sc[0])*Math.PI/180, dlon=(sub[1]-sc[1])*Math.PI/180;
   const a=Math.sin(dlat/2)**2+Math.cos(sc[0]*Math.PI/180)*Math.cos(sub[0]*Math.PI/180)*Math.sin(dlon/2)**2;
@@ -350,6 +351,7 @@ function renderCandidates(candidates, site) {
       <div class="ci">
         <div class="cn">${emp.displayName}</div>
         <div class="cm">${emp.empJobNameAtSite || 'Unknown role'} &middot; ${emp.city || 'Unknown suburb'}</div>
+        ${(emp.primaryJobName || emp.primaryLocation) ? `<div style="font-size:11px;color:var(--tx3);margin-bottom:4px">Primary: ${emp.primaryJobName || ''}${emp.primaryLocation ? ' @ ' + emp.primaryLocation.replace(/^SEC_/,'').replace(/_SECURITY$/,'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) : ''}</div>` : ''}
         <div class="bs">
           ${distBadge(d)}
           ${isSup ? '<span class="b bsup">Supervisor covering</span>' : ''}
