@@ -123,9 +123,9 @@ document.getElementById('empInput').addEventListener('keydown', e => { if(e.key=
 
 // Auto-login if session has stored id
 const storedId = sessionStorage.getItem('regionalManagerId');
-if (storedId) {
+if (storedId && !manager) {
   document.getElementById('empInput').value = storedId;
-  login();
+  setTimeout(login, 100);
 }
 
 async function login() {
@@ -178,17 +178,21 @@ async function startApp() {
   const endDate = getBrisDate(29);
   let loaded = 0;
 
-  for (const site of manager.sites) {
-    document.getElementById('progressLabel').textContent = `Loading ${site.name.replace(' - Security','').replace(' Security','')}...`;
-    document.getElementById('progressFill').style.width = (loaded / manager.sites.length * 100) + '%';
+  document.getElementById('progressLabel').textContent = `Loading ${manager.sites.length} sites...`;
+
+  await Promise.all(manager.sites.map(async site => {
     try {
       const r = await fetch(`${SERVER}/regional/sitedata?site=${encodeURIComponent(site.xrefCode)}&start=${startDate}&end=${endDate}`);
-      if (r.ok) siteData[site.xrefCode] = await r.json();
+      if (r.ok) {
+        siteData[site.xrefCode] = await r.json();
+        loaded++;
+        document.getElementById('progressFill').style.width = (loaded / manager.sites.length * 100) + '%';
+        document.getElementById('progressLabel').textContent = `Loaded ${loaded} of ${manager.sites.length} sites...`;
+        renderSites();
+        updateSummary();
+      }
     } catch(e) { console.warn('Failed:', site.xrefCode); }
-    loaded++;
-    renderSites();
-    updateSummary();
-  }
+  }));
 
   document.getElementById('loadingState').style.display = 'none';
   document.getElementById('progressLabel').style.display = 'none';
