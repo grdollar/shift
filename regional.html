@@ -182,7 +182,7 @@ async function startApp() {
   const seen = new Set();
   manager.sites = manager.sites.filter(s => { if(seen.has(s.xrefCode)) return false; seen.add(s.xrefCode); return true; });
 
-  document.getElementById('hdrName').textContent = manager.firstName + ' · ' + manager.sites.length + ' sites';
+  document.getElementById('hdrName').textContent = manager.displayName + ' · ' + manager.sites.length + ' sites';
   document.getElementById('hdrDate').textContent = fmtDate(today);
   document.getElementById('sumTotal').textContent = manager.sites.length;
   document.getElementById('progressLabel').style.display = 'block';
@@ -246,7 +246,7 @@ function renderSites() {
   document.getElementById('siteGrid').innerHTML = sorted.map(site => {
     const sd = siteData[site.xrefCode];
     const status = getSiteStatus(site.xrefCode);
-    const name = site.name.replace(' - Security','').replace(' Security','').replace(' - Cleaning','').replace(' Cleaning','');
+    const name = site.name;
     const assigned = (sd?.assignedXrefs||[]).length;
     const open = sd?.openShifts || 0;
     const clockedIn = Object.values(sd?.staffData||{}).filter(s => s.clockInTime).length;
