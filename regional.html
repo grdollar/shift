@@ -121,6 +121,13 @@ let manager = null, siteData = {}, empNames = {}, today = '';
 
 document.getElementById('empInput').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
 
+// Auto-login if session has stored id
+const storedId = sessionStorage.getItem('regionalManagerId');
+if (storedId) {
+  document.getElementById('empInput').value = storedId;
+  login();
+}
+
 async function login() {
   const val = document.getElementById('empInput').value.trim();
   const err = document.getElementById('loginErr');
@@ -132,6 +139,7 @@ async function login() {
     const data = await r.json();
     if (!r.ok || data.error) { err.textContent = data.error || 'Failed.'; return; }
     manager = data;
+    sessionStorage.setItem('regionalManagerId', val);
     err.textContent = '';
     startApp();
   } catch(e) { err.textContent = 'Could not connect to server.'; }
@@ -139,6 +147,7 @@ async function login() {
 
 function logout() {
   manager = null; siteData = {}; empNames = {};
+  sessionStorage.removeItem('regionalManagerId');
   document.getElementById('appScreen').classList.remove('show');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('siteGrid').innerHTML = '';
