@@ -46,7 +46,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
 .site-hdr{padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;cursor:pointer;user-select:none}
 .site-hdr:hover{background:var(--bg3)}
 .site-name{font-size:13px;font-weight:600}
-.site-sub{font-size:11px;color:var(--ink3);margin-top:1px}
+.site-sub{font-size:11px;color:var(--ink3);margin-top:2px}
 .site-right{display:flex;align-items:center;gap:.5rem;flex-shrink:0}
 .status-pill{font-size:10px;padding:2px 8px;border-radius:3px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 .pill-green{background:rgba(42,122,74,.12);color:var(--green)}
@@ -55,25 +55,31 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
 .pill-grey{background:rgba(26,24,20,.08);color:var(--ink3)}
 .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .dot-green{background:var(--green)}.dot-yellow{background:var(--yellow)}.dot-red{background:var(--red)}.dot-grey{background:var(--ink3)}
-.site-body{display:none;border-top:1px solid var(--br);padding:.875rem 1rem}
+.site-body{display:none;border-top:1px solid var(--br)}
 .site-body.open{display:block}
-.cal-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:.4rem}
-.cal-days{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-bottom:.875rem}
-@media(min-width:400px){.cal-days{grid-template-columns:repeat(15,1fr)}}
-.cal-day{aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-family:var(--mono);font-weight:500}
+
+/* STAFF TABLE */
+.staff-table{width:100%;border-collapse:collapse}
+.staff-table th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);padding:.5rem 1rem;text-align:left;background:var(--bg3);border-bottom:1px solid var(--br)}
+.staff-table td{font-size:12px;padding:.5rem 1rem;border-bottom:1px solid var(--br)}
+.staff-table tr:last-child td{border-bottom:none}
+.staff-table tr:hover td{background:var(--bg3)}
+.punch-in{color:var(--green);font-family:var(--mono);font-size:11px}
+.not-in{color:var(--yellow);font-size:11px}
+.open-row td{color:var(--red)}
+
+/* CALENDAR */
+.cal-section{padding:.875rem 1rem;border-top:1px solid var(--br)}
+.cal-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:.5rem}
+.cal-days{display:grid;grid-template-columns:repeat(14,1fr);gap:3px}
+@media(min-width:500px){.cal-days{grid-template-columns:repeat(28,1fr)}}
+.cal-day{aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;font-family:var(--mono);font-weight:500;cursor:default}
 .cal-day.green{background:rgba(42,122,74,.15);color:var(--green)}
 .cal-day.yellow{background:rgba(184,122,16,.15);color:var(--yellow)}
 .cal-day.red{background:rgba(196,57,26,.15);color:var(--red)}
 .cal-day.grey{background:rgba(26,24,20,.06);color:var(--ink3)}
 .cal-day.today{outline:2px solid var(--ink);outline-offset:-2px}
-.staff-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:.4rem}
-.staff-row{display:flex;align-items:center;gap:.5rem;padding:.375rem 0;border-bottom:1px solid var(--br);font-size:12px}
-.staff-row:last-child{border:none}
-.staff-name{flex:1}
-.staff-status{font-size:10px;padding:1px 7px;border-radius:3px;font-weight:600}
-.s-in{background:rgba(42,122,74,.12);color:var(--green)}
-.s-out{background:rgba(184,122,16,.12);color:var(--yellow)}
-.s-open{background:rgba(196,57,26,.12);color:var(--red)}
+
 .spinner{width:22px;height:22px;border:2px solid var(--br);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto .75rem}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-state{text-align:center;padding:2rem;color:var(--ink3);font-size:13px}
@@ -121,12 +127,10 @@ let manager = null, siteData = {}, empNames = {}, today = '';
 
 document.getElementById('empInput').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
 
-// Auto-login if session has stored id
-const storedId = sessionStorage.getItem('regionalManagerId');
-if (storedId && !manager) {
-  document.getElementById('empInput').value = storedId;
-  setTimeout(login, 100);
-}
+window.addEventListener('DOMContentLoaded', () => {
+  const storedId = sessionStorage.getItem('regionalManagerId');
+  if (storedId) { document.getElementById('empInput').value = storedId; login(); }
+});
 
 async function login() {
   const val = document.getElementById('empInput').value.trim();
@@ -164,34 +168,38 @@ function fmtDate(d) {
   return new Date(d+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',timeZone:'Australia/Brisbane'});
 }
 
+function fmtTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleTimeString('en-AU',{timeZone:'Australia/Brisbane',hour:'2-digit',minute:'2-digit',hour12:false});
+}
+
 async function startApp() {
   today = getBrisDate();
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appScreen').classList.add('show');
+
+  // Deduplicate sites
+  const seen = new Set();
+  manager.sites = manager.sites.filter(s => { if(seen.has(s.xrefCode)) return false; seen.add(s.xrefCode); return true; });
+
   document.getElementById('hdrName').textContent = manager.firstName + ' · ' + manager.sites.length + ' sites';
   document.getElementById('hdrDate').textContent = fmtDate(today);
   document.getElementById('sumTotal').textContent = manager.sites.length;
   document.getElementById('progressLabel').style.display = 'block';
   document.getElementById('progressBar').style.display = 'block';
 
-  const startDate = today;
-  const endDate = getBrisDate(29);
   let loaded = 0;
-
-  document.getElementById('progressLabel').textContent = `Loading ${manager.sites.length} sites...`;
 
   await Promise.all(manager.sites.map(async site => {
     try {
-      const r = await fetch(`${SERVER}/regional/sitedata?site=${encodeURIComponent(site.xrefCode)}&start=${startDate}&end=${endDate}`);
-      if (r.ok) {
-        siteData[site.xrefCode] = await r.json();
-        loaded++;
-        document.getElementById('progressFill').style.width = (loaded / manager.sites.length * 100) + '%';
-        document.getElementById('progressLabel').textContent = `Loaded ${loaded} of ${manager.sites.length} sites...`;
-        renderSites();
-        updateSummary();
-      }
+      const r = await fetch(`${SERVER}/regional/sitedata?site=${encodeURIComponent(site.xrefCode)}`);
+      if (r.ok) siteData[site.xrefCode] = await r.json();
     } catch(e) { console.warn('Failed:', site.xrefCode); }
+    loaded++;
+    document.getElementById('progressFill').style.width = (loaded / manager.sites.length * 100) + '%';
+    document.getElementById('progressLabel').textContent = `Loaded ${loaded} of ${manager.sites.length} sites...`;
+    renderSites();
+    updateSummary();
   }));
 
   document.getElementById('loadingState').style.display = 'none';
@@ -200,26 +208,24 @@ async function startApp() {
 
   // Fetch employee names
   const allXrefs = new Set();
-  Object.values(siteData).forEach(sd => {
-    (sd.byDate?.[today]?.assigned || []).forEach(e => allXrefs.add(e.employeeXRefCode));
-  });
+  Object.values(siteData).forEach(sd => (sd.assignedXrefs||[]).forEach(x => allXrefs.add(x)));
   if (allXrefs.size > 0) {
     try {
       const r = await fetch(`${SERVER}/regional/employees?xrefs=${[...allXrefs].join(',')}`);
       if (r.ok) { empNames = (await r.json()).employees || {}; renderSites(); }
-    } catch(e) { console.warn('Names failed'); }
+    } catch(e) {}
   }
 }
 
 function getSiteStatus(xrefCode) {
   const sd = siteData[xrefCode];
   if (!sd) return 'grey';
-  const td = sd.byDate?.[today];
-  if (!td) return 'grey';
-  if (td.open.length > 0) return 'red';
-  if (td.assigned.length === 0) return 'grey';
-  const present = td.assigned.filter(e => (sd.clockedIn||[]).includes(e.employeeXRefCode)).length;
-  if (present < td.assigned.length) return 'yellow';
+  const assigned = (sd.assignedXrefs||[]).length;
+  const open = sd.openShifts || 0;
+  if (open > 0) return 'red';
+  if (assigned === 0) return 'grey';
+  const clockedIn = Object.values(sd.staffData||{}).filter(s => s.clockInTime).length;
+  if (clockedIn < assigned) return 'yellow';
   return 'green';
 }
 
@@ -236,51 +242,69 @@ function renderSites() {
     const o={red:0,yellow:1,green:2,grey:3};
     return o[getSiteStatus(a.xrefCode)]-o[getSiteStatus(b.xrefCode)];
   });
+
   document.getElementById('siteGrid').innerHTML = sorted.map(site => {
     const sd = siteData[site.xrefCode];
     const status = getSiteStatus(site.xrefCode);
-    const name = site.name.replace(' - Security','').replace(' Security','');
-    const td = sd?.byDate?.[today] || {assigned:[],open:[]};
-    const clockedIn = new Set(sd?.clockedIn || []);
-    const assigned = td.assigned.length, open = td.open.length;
-    const present = td.assigned.filter(e => clockedIn.has(e.employeeXRefCode)).length;
+    const name = site.name.replace(' - Security','').replace(' Security','').replace(' - Cleaning','').replace(' Cleaning','');
+    const assigned = (sd?.assignedXrefs||[]).length;
+    const open = sd?.openShifts || 0;
+    const clockedIn = Object.values(sd?.staffData||{}).filter(s => s.clockInTime).length;
 
-    const dots = Array.from({length:28},(_,i) => {
-      const d = getBrisDate(i);
-      const dd = sd?.byDate?.[d];
-      let cls = 'grey';
-      let title = fmtDate(d) + ': no shifts';
-      if (dd) {
-        const a = dd.assigned.length, o = dd.open.length;
-        if (o > 0) { cls = 'red'; title = `${fmtDate(d)}: ${a+o} shifts, ${o} unfilled`; }
-        else if (a > 0) {
-          if (i === 0) {
-            const p = dd.assigned.filter(e => clockedIn.has(e.employeeXRefCode)).length;
-            cls = p < a ? 'yellow' : 'green';
-            title = `${fmtDate(d)}: ${a} shifts, ${p} clocked in`;
-          } else {
-            cls = 'green';
-            title = `${fmtDate(d)}: ${a} shifts`;
-          }
-        }
-      }
-      return `<div class="cal-day ${cls}${i===0?' today':''}" title="${title}">${parseInt(d.split('-')[2])}</div>`;
-    }).join('');
-
-    const rows = assigned===0 && open===0
-      ? '<div style="font-size:12px;color:var(--ink3)">No shifts today</div>'
-      : [
-          ...td.assigned.map(e => {
-            const n = empNames[e.employeeXRefCode]?.displayName || e.employeeXRefCode;
-            const isIn = clockedIn.has(e.employeeXRefCode);
-            return `<div class="staff-row"><div class="staff-name">${n}</div><div class="staff-status ${isIn?'s-in':'s-out'}">${isIn?'Clocked in':'Not in'}</div></div>`;
-          }),
-          ...td.open.map(() => `<div class="staff-row"><div class="staff-name" style="color:var(--red)">Unfilled shift</div><div class="staff-status s-open">Open</div></div>`),
-        ].join('');
+    const sub = sd
+      ? `${assigned} rostered · ${clockedIn} clocked in${open > 0 ? ' · ' + open + ' unfilled' : ''}`
+      : 'Loading...';
 
     const pillCls = {green:'pill-green',yellow:'pill-yellow',red:'pill-red',grey:'pill-grey'}[status];
     const pillLbl = {green:'Staffed',yellow:'Partial',red:'Understaffed',grey:'No shifts'}[status];
-    const sub = sd ? `${assigned} scheduled · ${present} clocked in · ${open} unfilled` : 'Loading...';
+
+    // Staff table rows
+    let staffRows = '';
+    if (sd) {
+      // Assigned staff
+      (sd.assignedXrefs||[]).forEach(xref => {
+        const emp = sd.staffData?.[xref] || {};
+        const name = empNames[xref]?.displayName || xref;
+        const shiftTime = emp.shiftStart
+          ? `${fmtTime(emp.shiftStart)} – ${fmtTime(emp.shiftEnd)}`
+          : '—';
+        const punchStatus = emp.clockInTime
+          ? `<span class="punch-in">✓ ${fmtTime(emp.clockInTime)}</span>`
+          : `<span class="not-in">Not in</span>`;
+        staffRows += `<tr>
+          <td>${name}</td>
+          <td>${shiftTime}</td>
+          <td>${punchStatus}</td>
+        </tr>`;
+      });
+      // Open/unfilled shifts
+      for (let i = 0; i < (sd.openShifts||0); i++) {
+        staffRows += `<tr class="open-row">
+          <td>⚠ Unfilled shift</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>`;
+      }
+    }
+
+    const staffTable = staffRows ? `
+      <table class="staff-table">
+        <thead><tr><th>Name</th><th>Shift</th><th>Clocked In</th></tr></thead>
+        <tbody>${staffRows}</tbody>
+      </table>` : '<div style="padding:.875rem 1rem;font-size:12px;color:var(--ink3)">No shifts today</div>';
+
+    // 28-day calendar
+    const cal = sd?.calendar || {};
+    const dots = Array.from({length:28},(_,i) => {
+      const d = getBrisDate(i);
+      const dd = cal[d];
+      let cls = 'grey', title = fmtDate(d)+': no shifts';
+      if (dd) {
+        if (dd.open > 0) { cls='red'; title=`${fmtDate(d)}: ${dd.assigned} rostered, ${dd.open} unfilled`; }
+        else if (dd.assigned > 0) { cls='green'; title=`${fmtDate(d)}: ${dd.assigned} rostered`; }
+      }
+      return `<div class="cal-day ${cls}${i===0?' today':''}" title="${title}">${parseInt(d.split('-')[2])}</div>`;
+    }).join('');
 
     return `<div class="site-card">
       <div class="site-hdr" onclick="toggleSite('${site.xrefCode}')">
@@ -291,10 +315,8 @@ function renderSites() {
         </div>
       </div>
       <div class="site-body" id="sb-${site.xrefCode.replace(/\W/g,'_')}">
-        <div class="cal-title">Next 30 days</div>
-        <div class="cal-days">${dots}</div>
-        <div class="staff-title">Today's staff</div>
-        ${rows}
+        ${staffTable}
+
       </div>
     </div>`;
   }).join('');
