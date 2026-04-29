@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Trident Regional Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f2ed;
+  --bg2:#ede9e1;
+  --bg3:#e5e0d5;
+  --bg4:#d8d2c5;
+  --ink:#1a1814;
+  --ink2:#4a4640;
+  --ink3:#8a8478;
+  --accent:#c4391a;
+  --accent2:#9e2d14;
+  --green:#2a7a4a;
+  --yellow:#b87a10;
+  --red:#c4391a;
+  --blue:#1a4a8a;
+  --br:rgba(26,24,20,.1);
+  --brm:rgba(26,24,20,.18);
+  --fn:'DM Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+  --r:6px;
+}
+body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100vh}
+
+/* LOGIN */
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.login-card{background:var(--ink);color:var(--bg);border-radius:12px;padding:3rem;max-width:420px;width:100%}
+.login-logo{font-size:11px;font-family:var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--bg3);margin-bottom:2rem}
+.login-title{font-size:28px;font-weight:700;margin-bottom:.5rem;line-height:1.1}
+.login-sub{font-size:14px;color:var(--bg3);margin-bottom:2rem}
+.login-input{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:var(--r);padding:.75rem 1rem;font-size:16px;color:var(--bg);font-family:var(--mono);outline:none;transition:border-color .15s}
+.login-input:focus{border-color:rgba(255,255,255,.4)}
+.login-input::placeholder{color:rgba(244,242,237,.3)}
+.login-btn{width:100%;margin-top:.75rem;padding:.875rem;background:var(--accent);border:none;border-radius:var(--r);color:white;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--fn);transition:background .15s}
+.login-btn:hover{background:var(--accent2)}
+.login-error{margin-top:.75rem;font-size:13px;color:#ff8a7a;text-align:center;min-height:20px}
+
+/* APP */
+.app{display:none;min-height:100vh;flex-direction:column}
+.app.visible{display:flex}
+
+/* HEADER */
+.hdr{background:var(--ink);color:var(--bg);padding:.875rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hdr-left{display:flex;align-items:center;gap:12px}
+.hdr-logo{font-size:10px;font-family:var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--bg4)}
+.hdr-sep{width:1px;height:20px;background:rgba(255,255,255,.15)}
+.hdr-name{font-size:14px;font-weight:500}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.hdr-date{font-size:12px;font-family:var(--mono);color:var(--bg4)}
+.logout-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--bg);font-size:12px;padding:.3rem .75rem;border-radius:4px;cursor:pointer;font-family:var(--fn)}
+
+/* BODY */
+.body{flex:1;padding:1.25rem}
+
+/* SUMMARY STRIP */
+.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin-bottom:1.25rem}
+@media(min-width:640px){.summary{grid-template-columns:repeat(4,1fr)}}
+.sum-card{background:var(--bg2);border:1px solid var(--br);border-radius:var(--r);padding:.875rem 1rem}
+.sum-val{font-size:26px;font-weight:700;font-family:var(--mono);line-height:1;margin-bottom:3px}
+.sum-label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3)}
+.sum-val.green{color:var(--green)}
+.sum-val.yellow{color:var(--yellow)}
+.sum-val.red{color:var(--red)}
+.sum-val.blue{color:var(--blue)}
+
+/* DATE NAV */
+.date-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.date-nav-label{font-size:13px;font-weight:600;color:var(--ink2)}
+.date-range{font-size:12px;font-family:var(--mono);color:var(--ink3)}
+
+/* VIEW TOGGLE */
+.view-toggle{display:flex;gap:.5rem;margin-bottom:1rem}
+.vtbtn{padding:.4rem .875rem;font-size:12px;font-weight:500;border:1px solid var(--br);border-radius:4px;background:var(--bg2);color:var(--ink2);cursor:pointer;font-family:var(--fn);transition:all .15s}
+.vtbtn.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* SITE GRID VIEW */
+.site-grid{display:flex;flex-direction:column;gap:.625rem}
+.site-card{background:var(--bg2);border:1px solid var(--br);border-radius:var(--r);overflow:hidden}
+.site-card-hdr{padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;cursor:pointer;user-select:none}
+.site-card-hdr:hover{background:var(--bg3)}
+.site-name{font-size:13px;font-weight:600}
+.site-meta{font-size:11px;color:var(--ink3);margin-top:1px}
+.site-badges{display:flex;gap:.4rem;align-items:center;flex-shrink:0}
+.badge{font-size:10px;padding:2px 8px;border-radius:3px;font-weight:600;font-family:var(--mono);white-space:nowrap}
+.badge-green{background:rgba(42,122,74,.12);color:var(--green)}
+.badge-yellow{background:rgba(184,122,16,.12);color:var(--yellow)}
+.badge-red{background:rgba(196,57,26,.12);color:var(--red)}
+.badge-grey{background:rgba(26,24,20,.08);color:var(--ink3)}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-green{background:var(--green)}
+.dot-yellow{background:var(--yellow)}
+.dot-red{background:var(--red)}
+.dot-grey{background:var(--ink3)}
+
+/* SITE EXPANDED */
+.site-body{display:none;border-top:1px solid var(--br);padding:.875rem 1rem}
+.site-body.open{display:block}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:.75rem}
+.cal-day{aspect-ratio:1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--mono);font-weight:500;cursor:pointer;position:relative;transition:transform .1s}
+.cal-day:hover{transform:scale(1.1)}
+.cal-day.green{background:rgba(42,122,74,.15);color:var(--green)}
+.cal-day.yellow{background:rgba(184,122,16,.15);color:var(--yellow)}
+.cal-day.red{background:rgba(196,57,26,.15);color:var(--red)}
+.cal-day.grey{background:rgba(26,24,20,.06);color:var(--ink3)}
+.cal-day.today-marker{outline:2px solid var(--ink);outline-offset:-2px}
+.cal-labels{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px}
+.cal-lbl{font-size:9px;font-family:var(--mono);color:var(--ink3);text-align:center;text-transform:uppercase}
+.today-shifts{margin-top:.5rem}
+.shift-row{display:flex;align-items:center;gap:.5rem;padding:.375rem 0;border-bottom:1px solid var(--br);font-size:12px}
+.shift-row:last-child{border:none}
+.shift-time{font-family:var(--mono);color:var(--ink2);min-width:100px;font-size:11px}
+.shift-emp{flex:1;color:var(--ink)}
+.shift-status{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:600}
+
+/* CALENDAR VIEW */
+.cal-view{overflow-x:auto}
+.cal-table{width:100%;border-collapse:collapse;font-size:12px;min-width:700px}
+.cal-table th{background:var(--bg3);padding:.5rem .625rem;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);white-space:nowrap}
+.cal-table td{padding:.5rem .625rem;border-bottom:1px solid var(--br);vertical-align:middle}
+.cal-table tr:hover td{background:var(--bg3)}
+.cal-table .site-col{font-size:12px;font-weight:500;white-space:nowrap}
+.day-cell{width:36px;text-align:center}
+.day-dot{width:22px;height:22px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:9px;font-family:var(--mono);font-weight:600}
+.day-dot.green{background:rgba(42,122,74,.15);color:var(--green)}
+.day-dot.yellow{background:rgba(184,122,16,.15);color:var(--yellow)}
+.day-dot.red{background:rgba(196,57,26,.15);color:var(--red)}
+.day-dot.grey{background:rgba(26,24,20,.06);color:var(--ink3)}
+.day-dot.today-col{outline:2px solid var(--ink);outline-offset:1px}
+
+/* LOADING */
+.loading{text-align:center;padding:3rem;color:var(--ink3);font-size:13px}
+.spinner{width:24px;height:24px;border:2px solid var(--br);border-top-color:var(--ink);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 1rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* EMPTY */
+.empty{text-align:center;padding:2rem;color:var(--ink3);font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">Trident Services · Regional Portal</div>
+    <div class="login-title">Regional Manager Dashboard</div>
+    <div class="login-sub">Enter your Dayforce employee number to continue</div>
+    <input class="login-input" id="empInput" type="text" placeholder="e.g. 17626" maxlength="10" inputmode="numeric">
+    <button class="login-btn" onclick="login()">View Dashboard</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appScreen">
+  <header class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-logo">Trident</div>
+      <div class="hdr-sep"></div>
+      <div class="hdr-name" id="managerName">Loading...</div>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-date" id="hdrDate"></div>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <div class="body">
+    <!-- SUMMARY -->
+    <div class="summary">
+      <div class="sum-card"><div class="sum-val green" id="sumGreen">—</div><div class="sum-label">Fully Staffed</div></div>
+      <div class="sum-card"><div class="sum-val yellow" id="sumYellow">—</div><div class="sum-label">Partial / Late</div></div>
+      <div class="sum-card"><div class="sum-val red" id="sumRed">—</div><div class="sum-label">Understaffed</div></div>
+      <div class="sum-card"><div class="sum-val blue" id="sumTotal">—</div><div class="sum-label">Total Sites</div></div>
+    </div>
+
+    <!-- VIEW TOGGLE -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+      <div class="view-toggle">
+        <button class="vtbtn active" id="btnSiteView" onclick="setView('site')">Site View</button>
+        <button class="vtbtn" id="btnCalView" onclick="setView('calendar')">Calendar View</button>
+      </div>
+      <div class="date-range" id="dateRange"></div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="loading" id="loadingState">
+      <div class="spinner"></div>
+      Loading site data...
+    </div>
+
+    <!-- SITE VIEW -->
+    <div id="siteView" style="display:none">
+      <div class="site-grid" id="siteGrid"></div>
+    </div>
+
+    <!-- CALENDAR VIEW -->
+    <div id="calView" style="display:none">
+      <div class="cal-view">
+        <table class="cal-table" id="calTable">
+          <thead id="calHead"></thead>
+          <tbody id="calBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SERVER = 'https://shift.tridentservices.com.au';
+const VALID_MANAGERS = ['17626','17596','15056','17161','13739','12717','13880','13881'];
+
+let managerData = null;
+let siteSchedules = {};
+let sitePunches = {};
+let employeeNames = {};
+let currentView = 'site';
+let dates = [];
+
+// --- LOGIN ---
+document.getElementById('empInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') login();
+});
+
+async function login() {
+  const val = document.getElementById('empInput').value.trim();
+  const err = document.getElementById('loginError');
+  err.textContent = '';
+
+  if (!VALID_MANAGERS.includes(val)) {
+    err.textContent = 'Employee number not recognised as a regional manager.';
+    return;
+  }
+
+  err.textContent = 'Authenticating...';
+  try {
+    const r = await fetch(`${SERVER}/regional/manager?xref=${val}`);
+    const data = await r.json();
+    if (!r.ok || data.error) {
+      err.textContent = data.error || 'Failed to load profile.';
+      return;
+    }
+    managerData = data;
+    err.textContent = '';
+    startApp();
+  } catch(e) {
+    err.textContent = 'Could not connect to server.';
+  }
+}
+
+function logout() {
+  managerData = null;
+  siteSchedules = {};
+  sitePunches = {};
+  document.getElementById('appScreen').classList.remove('visible');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('empInput').value = '';
+}
+
+// --- APP START ---
+function startApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').classList.add('visible');
+  document.getElementById('managerName').textContent = managerData.firstName + ' · ' + managerData.sites.length + ' sites';
+
+  // Set date range — today + 29 days
+  const today = new Date(new Date().toLocaleString('en-US', {timeZone: 'Australia/Brisbane'}));
+  dates = [];
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    dates.push(d.toLocaleDateString('en-CA', {timeZone: 'Australia/Brisbane'}));
+  }
+
+  const startStr = formatDate(dates[0]);
+  const endStr = formatDate(dates[dates.length - 1]);
+  document.getElementById('dateRange').textContent = `${startStr} – ${endStr}`;
+  document.getElementById('hdrDate').textContent = formatDate(dates[0]);
+
+  loadAllSites();
+}
+
+async function loadAllSites() {
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('siteView').style.display = 'none';
+  document.getElementById('calView').style.display = 'none';
+
+  const startDate = dates[0];
+  const endDate = dates[dates.length - 1];
+  const today = dates[0];
+
+  // Fetch schedules and punches for all sites in parallel
+  await Promise.all(managerData.sites.map(async site => {
+    try {
+      const [schedR, punchR] = await Promise.all([
+        fetch(`${SERVER}/regional/schedules?site=${encodeURIComponent(site.xrefCode)}&start=${startDate}&end=${endDate}`),
+        fetch(`${SERVER}/regional/punches?site=${encodeURIComponent(site.xrefCode)}&date=${today}`),
+      ]);
+      if (schedR.ok) siteSchedules[site.xrefCode] = await schedR.json();
+      if (punchR.ok) sitePunches[site.xrefCode] = await punchR.json();
+    } catch(e) {
+      console.warn('Failed to load', site.xrefCode, e);
+    }
+  }));
+
+  // Collect all unique employee xrefcodes from schedules
+  const allXrefs = new Set();
+  Object.values(siteSchedules).forEach(s => {
+    Object.values(s.byDate || {}).forEach(shifts => {
+      shifts.forEach(sh => { if (sh.employeeXRefCode) allXrefs.add(sh.employeeXRefCode); });
+    });
+  });
+
+  // Fetch employee names
+  if (allXrefs.size > 0) {
+    try {
+      const r = await fetch(`${SERVER}/regional/employees?xrefs=${[...allXrefs].join(',')}`);
+      if (r.ok) {
+        const data = await r.json();
+        employeeNames = data.employees || {};
+      }
+    } catch(e) { console.warn('Could not load employee names', e); }
+  }
+
+  document.getElementById('loadingState').style.display = 'none';
+  renderSummary();
+  renderSiteView();
+  renderCalView();
+  setView(currentView);
+}
+
+// --- SITE STATUS ---
+function getSiteStatus(xrefCode, date) {
+  const sched = siteSchedules[xrefCode];
+  if (!sched || !sched.byDate) return 'grey';
+  const dayShifts = sched.byDate[date] || [];
+  if (dayShifts.length === 0) return 'grey';
+
+  if (date !== dates[0]) return 'green'; // Future — assume ok if scheduled
+
+  // Today — check punches
+  const punches = sitePunches[xrefCode]?.punches || [];
+  const clockedIn = new Set(punches.filter(p => p.PunchType === 'Punch_In').map(p => p.EmployeeXRefCode));
+  const scheduled = dayShifts.length;
+  const present = dayShifts.filter(s => clockedIn.has(s.employeeXRefCode)).length;
+
+  if (present === 0 && scheduled > 0) return 'red';
+  if (present < scheduled) return 'yellow';
+  return 'green';
+}
+
+function getTodayStatus(xrefCode) {
+  return getSiteStatus(xrefCode, dates[0]);
+}
+
+// --- SUMMARY ---
+function renderSummary() {
+  let green = 0, yellow = 0, red = 0;
+  managerData.sites.forEach(s => {
+    const status = getTodayStatus(s.xrefCode);
+    if (status === 'green') green++;
+    else if (status === 'yellow') yellow++;
+    else if (status === 'red') red++;
+  });
+  document.getElementById('sumGreen').textContent = green;
+  document.getElementById('sumYellow').textContent = yellow;
+  document.getElementById('sumRed').textContent = red;
+  document.getElementById('sumTotal').textContent = managerData.sites.length;
+}
+
+// --- SITE VIEW ---
+function renderSiteView() {
+  const container = document.getElementById('siteGrid');
+  if (!managerData.sites.length) {
+    container.innerHTML = '<div class="empty">No sites found</div>';
+    return;
+  }
+
+  // Sort by status — red first, then yellow, then green
+  const sorted = [...managerData.sites].sort((a, b) => {
+    const order = {red:0, yellow:1, green:2, grey:3};
+    return order[getTodayStatus(a.xrefCode)] - order[getTodayStatus(b.xrefCode)];
+  });
+
+  container.innerHTML = sorted.map(site => {
+    const status = getTodayStatus(site.xrefCode);
+    const sched = siteSchedules[site.xrefCode];
+    const todayShifts = sched?.byDate?.[dates[0]] || [];
+    const punches = sitePunches[site.xrefCode]?.punches || [];
+    const clockedIn = new Set(punches.filter(p => p.PunchType === 'Punch_In').map(p => p.EmployeeXRefCode));
+
+    // Mini calendar
+    const calDays = dates.slice(0, 30).map(d => {
+      const s = getSiteStatus(site.xrefCode, d);
+      const dayNum = parseInt(d.split('-')[2]);
+      const isToday = d === dates[0];
+      return `<div class="cal-day ${s}${isToday ? ' today-marker' : ''}" title="${d}">${dayNum}</div>`;
+    }).join('');
+
+    const calLabels = ['M','T','W','T','F','S','S'].map(d => `<div class="cal-lbl">${d}</div>`).join('');
+
+    const shiftRows = todayShifts.length === 0
+      ? '<div style="font-size:12px;color:var(--ink3);padding:.5rem 0">No shifts scheduled today</div>'
+      : todayShifts.map(s => {
+          const present = clockedIn.has(s.employeeXRefCode);
+          return `<div class="shift-row">
+            <div class="shift-time">${s.start} – ${s.end}</div>
+            <div class="shift-emp">${employeeNames[s.employeeXRefCode]?.displayName || s.employeeXRefCode}</div>
+            <div class="shift-status badge ${present ? 'badge-green' : 'badge-yellow'}">${present ? 'In' : 'Scheduled'}</div>
+          </div>`;
+        }).join('');
+
+    const statusLabel = status === 'green' ? 'Staffed' : status === 'yellow' ? 'Partial' : status === 'red' ? 'Understaffed' : 'No shifts';
+
+    return `
+      <div class="site-card">
+        <div class="site-card-hdr" onclick="toggleSite('${site.xrefCode}')">
+          <div>
+            <div class="site-name">${site.name.replace(' - Security','').replace(' Security','')}</div>
+            <div class="site-meta">${todayShifts.length} shift${todayShifts.length !== 1 ? 's' : ''} today · ${clockedIn.size} clocked in</div>
+          </div>
+          <div class="site-badges">
+            <div class="badge badge-${status === 'grey' ? 'grey' : status}">${statusLabel}</div>
+            <div class="status-dot dot-${status === 'grey' ? 'grey' : status}"></div>
+          </div>
+        </div>
+        <div class="site-body" id="body-${site.xrefCode.replace(/[^a-z0-9]/gi,'_')}">
+          <div class="cal-labels">${calLabels}</div>
+          <div class="cal-grid">${calDays}</div>
+          <div class="today-shifts">${shiftRows}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleSite(xrefCode) {
+  const id = 'body-' + xrefCode.replace(/[^a-z0-9]/gi,'_');
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+// --- CALENDAR VIEW ---
+function renderCalView() {
+  const head = document.getElementById('calHead');
+  const body = document.getElementById('calBody');
+
+  // Header — site col + 30 day cols
+  const dayHeaders = dates.map(d => {
+    const date = new Date(d + 'T00:00:00');
+    const day = date.toLocaleDateString('en-AU', {weekday:'narrow', timeZone:'Australia/Brisbane'});
+    const num = parseInt(d.split('-')[2]);
+    const isToday = d === dates[0];
+    return `<th class="day-cell" style="${isToday ? 'background:var(--ink);color:var(--bg)' : ''}">${day}<br>${num}</th>`;
+  }).join('');
+  head.innerHTML = `<tr><th style="min-width:140px">Site</th>${dayHeaders}</tr>`;
+
+  body.innerHTML = managerData.sites.map(site => {
+    const dayCells = dates.map(d => {
+      const status = getSiteStatus(site.xrefCode, d);
+      const sched = siteSchedules[site.xrefCode];
+      const shifts = sched?.byDate?.[d] || [];
+      const isToday = d === dates[0];
+      return `<td class="day-cell">
+        <div class="day-dot ${status}${isToday ? ' today-col' : ''}" title="${shifts.length} shift${shifts.length !== 1 ? 's' : ''}">
+          ${shifts.length || ''}
+        </div>
+      </td>`;
+    }).join('');
+    const siteName = site.name.replace(' - Security','').replace(' Security','');
+    return `<tr><td class="site-col">${siteName}</td>${dayCells}</tr>`;
+  }).join('');
+}
+
+// --- VIEW TOGGLE ---
+function setView(v) {
+  currentView = v;
+  document.getElementById('siteView').style.display = v === 'site' ? 'block' : 'none';
+  document.getElementById('calView').style.display = v === 'calendar' ? 'block' : 'none';
+  document.getElementById('btnSiteView').classList.toggle('active', v === 'site');
+  document.getElementById('btnCalView').classList.toggle('active', v === 'calendar');
+}
+
+// --- UTILS ---
+function formatDate(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-AU', {day:'numeric', month:'short', year:'numeric', timeZone:'Australia/Brisbane'});
+}
+</script>
+</body>
+</html>
