@@ -245,18 +245,26 @@ function renderSites() {
     const assigned = td.assigned.length, open = td.open.length;
     const present = td.assigned.filter(e => clockedIn.has(e.employeeXRefCode)).length;
 
-    const dots = Array.from({length:30},(_,i) => {
+    const dots = Array.from({length:28},(_,i) => {
       const d = getBrisDate(i);
       const dd = sd?.byDate?.[d];
       let cls = 'grey';
+      let title = fmtDate(d) + ': no shifts';
       if (dd) {
-        if (dd.open.length > 0) cls = 'red';
-        else if (dd.assigned.length > 0) {
-          if (d === today) cls = present < assigned ? 'yellow' : 'green';
-          else cls = 'green';
+        const a = dd.assigned.length, o = dd.open.length;
+        if (o > 0) { cls = 'red'; title = `${fmtDate(d)}: ${a+o} shifts, ${o} unfilled`; }
+        else if (a > 0) {
+          if (i === 0) {
+            const p = dd.assigned.filter(e => clockedIn.has(e.employeeXRefCode)).length;
+            cls = p < a ? 'yellow' : 'green';
+            title = `${fmtDate(d)}: ${a} shifts, ${p} clocked in`;
+          } else {
+            cls = 'green';
+            title = `${fmtDate(d)}: ${a} shifts`;
+          }
         }
       }
-      return `<div class="cal-day ${cls}${i===0?' today':''}" title="${fmtDate(d)}">${parseInt(d.split('-')[2])}</div>`;
+      return `<div class="cal-day ${cls}${i===0?' today':''}" title="${title}">${parseInt(d.split('-')[2])}</div>`;
     }).join('');
 
     const rows = assigned===0 && open===0
@@ -272,7 +280,7 @@ function renderSites() {
 
     const pillCls = {green:'pill-green',yellow:'pill-yellow',red:'pill-red',grey:'pill-grey'}[status];
     const pillLbl = {green:'Staffed',yellow:'Partial',red:'Understaffed',grey:'No shifts'}[status];
-    const sub = sd ? `${assigned} scheduled · ${present} clocked in${open>0?' · '+open+' open':''}` : 'Loading...';
+    const sub = sd ? `${assigned} scheduled · ${present} clocked in · ${open} unfilled` : 'Loading...';
 
     return `<div class="site-card">
       <div class="site-hdr" onclick="toggleSite('${site.xrefCode}')">
