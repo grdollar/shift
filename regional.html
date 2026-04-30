@@ -163,11 +163,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
     <div class="loading-state" id="loadingState"><div class="spinner"></div>Loading...</div>
     <div class="site-grid" id="siteGrid" style="display:flex;flex-direction:column;gap:.5rem"></div>
     <!-- CALENDAR VIEW -->
-    <div id="calendarView" style="display:none">
-      <div style="overflow-x:auto">
-        <table class="cal-table" id="calTable"></table>
-      </div>
-    </div>
+    <div id="calendarView" style="display:none;padding:.5rem 0"></div>
   </div>
 </div>
 
@@ -431,40 +427,31 @@ function setTab(tab) {
 
 function renderCalendar() {
   if (!manager) return;
-  const table = document.getElementById('calTable');
-  if (!table) return;
-  console.log('renderCalendar: sites=', manager.sites.length, 'siteData keys=', Object.keys(siteData).length);
+  const container = document.getElementById('calendarView');
   const dates = Array.from({length:28}, (_,i) => getBrisDate(i));
 
-  // Header row
-  const headCells = dates.map((d,i) => {
-    const date = new Date(d+'T00:00:00');
-    const day = date.toLocaleDateString('en-AU',{weekday:'narrow',timeZone:'Australia/Brisbane'});
-    const num = parseInt(d.split('-')[2]);
-    return `<th${i===0?' class="cal-cell-today"':''}>${day}<br>${num}</th>`;
-  }).join('');
-  
   const rows = manager.sites.map(site => {
     const sd = siteData[site.xrefCode];
     const name = site.name.replace(' - Security','').replace(' Security','').replace(' - Cleaning','').replace(' Cleaning','');
-    const cells = dates.map((d,i) => {
+
+    const dots = dates.map((d,i) => {
       const cal = sd?.calendar?.[d];
-      let cls = 'cal-cell-grey', text = '';
-      if (cal) {
-        if (cal.open > 0) { cls = 'cal-cell-red'; text = cal.open + ' open'; }
-        else if (cal.assigned > 0) { cls = 'cal-cell-grey'; text = ''; }
+      let cls = 'grey', text = '', clickAttr = '';
+      if (cal && cal.open > 0) {
+        cls = 'red';
+        text = cal.open;
+        clickAttr = `onclick="handleCalClick(this)" data-site="${site.xrefCode}" data-name="${name}" data-date="${d}" data-open='${JSON.stringify(cal.openShifts||[])}' style="cursor:pointer"`;
       }
-      const clickAttr = cal?.open > 0 ? `onclick="handleCalClick(this)" data-site="${site.xrefCode}" data-name="${name}" data-date="${d}" data-open='${JSON.stringify(cal.openShifts||[])}' style="cursor:pointer"` : '';
-      const circleClass = cls === 'cal-cell-red' ? 'day-circle day-circle-red' : 'day-circle day-circle-grey';
-      const circleText = cls === 'cal-cell-red' ? text.replace(' open','') : '';
-      return `<td class="${cls}${i===0?' cal-cell-today':''}" ${clickAttr}><div class="${circleClass}">${circleText}</div></td>`;
+      return `<div class="cal-day ${cls}${i===0?' today':''}" title="${fmtDate(d)}" ${clickAttr}>${text}</div>`;
     }).join('');
-    return `<tr><td class="site-td">${name}</td>${cells}</tr>`;
+
+    return `<div style="margin-bottom:1rem">
+      <div style="font-size:12px;font-weight:600;margin-bottom:.25rem;color:var(--ink)">${name}</div>
+      <div class="cal-days">${dots}</div>
+    </div>`;
   }).join('');
 
-  table.innerHTML = `
-    <thead><tr><th class="site-th">Site</th>${headCells}</tr></thead>
-    <tbody>${rows}</tbody>`;
+  container.innerHTML = rows;
 }
 
 function handleCalClick(el) {
