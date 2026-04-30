@@ -97,6 +97,27 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
 .cal-cell-red{background:rgba(196,57,26,.15);color:var(--red)}
 .cal-cell-grey{color:var(--ink3)}
 .cal-cell-today{outline:2px solid var(--ink);outline-offset:-2px}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,24,20,.5);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg);border-radius:10px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.modal-hdr{padding:1rem 1.25rem;border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:flex-start}
+.modal-title{font-size:14px;font-weight:600}
+.modal-sub{font-size:12px;color:var(--ink3);margin-top:2px}
+.modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--ink3);line-height:1;padding:0}
+.modal-body{padding:1rem 1.25rem}
+.modal-section{margin-bottom:1rem}
+.modal-section-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:.5rem}
+.candidate-row{display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--br)}
+.candidate-row:last-child{border:none}
+.cand-av{width:32px;height:32px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--ink2);flex-shrink:0}
+.cand-info{flex:1;min-width:0}
+.cand-name{font-size:13px;font-weight:500}
+.cand-detail{font-size:11px;color:var(--ink3);margin-top:1px}
+.cand-phone{font-size:12px;font-family:var(--mono);color:var(--blue)}
+.cand-phone a{color:var(--blue);text-decoration:none}
+.modal-loading{text-align:center;padding:2rem;color:var(--ink3);font-size:13px}
+.shift-badge{display:inline-block;font-size:11px;padding:3px 8px;background:rgba(196,57,26,.12);color:var(--red);border-radius:4px;font-weight:600;margin-bottom:.75rem}
 .spinner{width:22px;height:22px;border:2px solid var(--br);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto .75rem}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-state{text-align:center;padding:2rem;color:var(--ink3);font-size:13px}
@@ -143,6 +164,22 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
       <div style="overflow-x:auto">
         <table class="cal-table" id="calTable"></table>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- UNFILLED SHIFT MODAL -->
+<div class="modal-overlay" id="shiftModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title" id="modalTitle">Unfilled Shift</div>
+        <div class="modal-sub" id="modalSub"></div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('shiftModal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <div class="modal-loading">Loading candidates...</div>
     </div>
   </div>
 </div>
@@ -382,7 +419,10 @@ function setTab(tab) {
 }
 
 function renderCalendar() {
+  if (!manager) return;
   const table = document.getElementById('calTable');
+  if (!table) return;
+  console.log('renderCalendar: sites=', manager.sites.length, 'siteData keys=', Object.keys(siteData).length);
   const dates = Array.from({length:28}, (_,i) => getBrisDate(i));
 
   // Header row
@@ -403,7 +443,8 @@ function renderCalendar() {
         if (cal.open > 0) { cls = 'cal-cell-red'; text = cal.open + ' open'; }
         else if (cal.assigned > 0) { cls = 'cal-cell-green'; text = cal.assigned; }
       }
-      return `<td class="${cls}${i===0?' cal-cell-today':''}">${text}</td>`;
+      const clickAttr = cal?.open > 0 ? `onclick="openUnfilledShift('${site.xrefCode}','${name}','${d}',${JSON.stringify(cal.openShifts||[])})" style="cursor:pointer"` : '';
+      return `<td class="${cls}${i===0?' cal-cell-today':''}" ${clickAttr}>${text}</td>`;
     }).join('');
     return `<tr><td class="site-td">${name}</td>${cells}</tr>`;
   }).join('');
@@ -411,6 +452,73 @@ function renderCalendar() {
   table.innerHTML = `
     <thead><tr><th class="site-th">Site</th>${headCells}</tr></thead>
     <tbody>${rows}</tbody>`;
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('shiftModal')) {
+    document.getElementById('shiftModal').classList.remove('open');
+  }
+}
+
+async function openUnfilledShift(site, siteName, date, openShifts) {
+  const modal = document.getElementById('shiftModal');
+  const title = document.getElementById('modalTitle');
+  const sub = document.getElementById('modalSub');
+  const body = document.getElementById('modalBody');
+
+  title.textContent = siteName;
+  sub.textContent = fmtDate(date) + ' · ' + openShifts.length + ' unfilled shift' + (openShifts.length !== 1 ? 's' : '');
+  body.innerHTML = '<div class="modal-loading"><div class="spinner" style="margin:0 auto .5rem"></div>Loading candidates...</div>';
+  modal.classList.add('open');
+
+  try {
+    const jobXRefCode = openShifts[0]?.jobXRefCode || '';
+    const url = `${SERVER}/candidates?site=${encodeURIComponent(site)}&date=${encodeURIComponent(date)}${jobXRefCode ? '&jobXRefCode=' + encodeURIComponent(jobXRefCode) : ''}`;
+    const r = await fetch(url);
+    const data = await r.json();
+
+    if (!r.ok || data.error) {
+      body.innerHTML = `<div class="modal-loading">Failed to load candidates: ${data.error || 'Unknown error'}</div>`;
+      return;
+    }
+
+    const candidates = data.candidates || [];
+
+    // Show unfilled shifts
+    const shiftsHtml = openShifts.map(s => `
+      <div class="shift-badge">${s.jobXRefCode ? s.jobXRefCode.replace(/_/g,' ') : 'Unfilled shift'}</div>
+    `).join('');
+
+    // Show candidates
+    const candsHtml = candidates.length === 0
+      ? '<div style="font-size:13px;color:var(--ink3);padding:.5rem 0">No available candidates found</div>'
+      : candidates.map(c => {
+          const initials = (c.displayName||'?').split(' ').slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
+          const dist = c.distance ? c.distance.toFixed(1) + 'km away' : '';
+          const phone = c.phone ? `<a href="tel:${c.phone}">${c.phone}</a>` : '—';
+          return `<div class="candidate-row">
+            <div class="cand-av">${initials}</div>
+            <div class="cand-info">
+              <div class="cand-name">${c.displayName}</div>
+              <div class="cand-detail">${c.primaryJobName || ''} ${dist ? '· ' + dist : ''}</div>
+            </div>
+            <div class="cand-phone">${phone}</div>
+          </div>`;
+        }).join('');
+
+    body.innerHTML = `
+      <div class="modal-section">
+        <div class="modal-section-title">Unfilled shifts</div>
+        ${shiftsHtml}
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Available candidates (${candidates.length})</div>
+        ${candsHtml}
+      </div>`;
+
+  } catch(e) {
+    body.innerHTML = `<div class="modal-loading">Error: ${e.message}</div>`;
+  }
 }
 
 function toggleSite(x) {
