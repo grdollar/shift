@@ -85,6 +85,46 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
 .cal-day.today{outline:2px solid var(--ink);outline-offset:-2px}
 
 .view-tabs{display:flex;gap:.5rem;margin-bottom:.875rem}
+/* Shift tool styles */
+.sf-w{max-width:680px;margin:0 auto}
+.sf-card{background:#fff;border:.5px solid rgba(0,0,0,.15);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem}
+.sf-st{font-size:11px;font-weight:600;color:#6b6b68;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.sf-r2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.sf-fg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.sf-fg label{font-size:12px;color:#6b6b68;font-weight:500}
+.sf-sel{width:100%;padding:8px 10px;font-size:14px;font-family:var(--fn);border:.5px solid rgba(0,0,0,.25);border-radius:8px;background:#fff;color:#1a1a19;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6b68' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer}
+.sf-sel:focus{outline:none;border-color:rgba(12,68,124,.35);box-shadow:0 0 0 3px rgba(12,68,124,.08)}
+.sf-sel:disabled{opacity:.45;cursor:not-allowed}
+.sf-tr{display:flex;gap:8px;flex-wrap:wrap}
+.sf-tg{padding:6px 14px;border:.5px solid rgba(0,0,0,.25);border-radius:8px;cursor:pointer;font-size:13px;font-family:var(--fn);color:#6b6b68;background:#fff;user-select:none;transition:all .12s}
+.sf-tg:hover{background:#f7f7f5}
+.sf-tg.on{background:#e6f1fb;border-color:rgba(12,68,124,.35);color:#0c447c;font-weight:500}
+.sf-btn{width:100%;padding:11px;font-size:15px;font-weight:500;font-family:var(--fn);border:.5px solid rgba(0,0,0,.25);border-radius:8px;cursor:pointer;background:#fff;color:#1a1a19;transition:all .12s;margin-top:4px}
+.sf-btn:hover{background:#f7f7f5}
+.sf-btn:disabled{opacity:.45;cursor:not-allowed}
+.sf-rh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.sf-rc{font-size:13px;color:#6b6b68}
+.sf-sr{display:flex;gap:8px;margin-bottom:14px;align-items:center}
+.sf-sl{font-size:12px;color:#6b6b68}
+.sf-sb{padding:5px 12px;border:.5px solid rgba(0,0,0,.25);border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--fn);color:#6b6b68;background:#fff;transition:all .1s}
+.sf-sb.on{background:#f7f7f5;color:#1a1a19;font-weight:500}
+.sf-cd{display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-bottom:.5px solid rgba(0,0,0,.15)}
+.sf-cd:last-child{border-bottom:none}
+.sf-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.sf-a1{background:#e6f1fb;color:#0c447c}.sf-a2{background:#eaf3de;color:#27500a}.sf-a3{background:#faeeda;color:#633806}.sf-a4{background:#eeedfe;color:#3c3489}
+.sf-ci{flex:1;min-width:0}
+.sf-cn{font-size:14px;font-weight:500;color:#1a1a19;margin-bottom:2px}
+.sf-cm{font-size:12px;color:#6b6b68;margin-bottom:6px}
+.sf-bs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
+.sf-b{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:500}
+.sf-bl{background:#e1f5ee;color:#085041}.sf-bu{background:#e6f1fb;color:#0c447c}
+.sf-bd{background:#f7f7f5;color:#6b6b68}
+.sf-bd.nr{background:#eaf3de;color:#27500a}.sf-bd.md{background:#faeeda;color:#633806}.sf-bd.fr{background:#fcebeb;color:#a32d2d}
+.sf-cr{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sf-cr a{font-size:13px;color:#0c447c;text-decoration:none}
+.sf-cr a:hover{text-decoration:underline}
+.sf-empty{text-align:center;padding:2.5rem;color:#6b6b68;font-size:14px}
+@media(max-width:480px){.sf-r2{grid-template-columns:1fr}}
 .vtab{padding:.4rem .875rem;font-size:12px;font-weight:500;border:1px solid var(--br);border-radius:4px;background:var(--bg2);color:var(--ink2);cursor:pointer;font-family:var(--fn)}
 .vtab.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .cal-table{width:100%;border-collapse:collapse;font-size:11px}
@@ -167,32 +207,38 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
 
     <!-- SHIFT FILL VIEW -->
     <div id="shiftFillView" style="display:none">
-      <div style="background:var(--bg2);border:1px solid var(--br);border-radius:var(--r);padding:1.25rem;max-width:600px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem">
-          <div>
-            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);display:block;margin-bottom:.375rem">Site</label>
-            <select id="sfSite" onchange="sfLoadRoster()" style="width:100%;padding:.625rem .75rem;border:1px solid var(--br);border-radius:var(--r);background:var(--bg);font-size:13px;font-family:var(--fn);color:var(--ink)">
-              <option value="">Select site...</option>
+      <div class="sf-w">
+        <div class="sf-card">
+          <div class="sf-st">Shift details</div>
+          <div class="sf-r2">
+            <div class="sf-fg">
+              <label>Site</label>
+              <select id="sfSite" class="sf-sel" onchange="sfLoadRoster()">
+                <option value="">— select site —</option>
+              </select>
+            </div>
+            <div class="sf-fg">
+              <label>Date</label>
+              <input type="date" id="sfDate" class="sf-sel" onchange="sfLoadRoster()">
+            </div>
+          </div>
+          <div class="sf-fg">
+            <label>Who can't make their shift</label>
+            <select id="sfEmployee" class="sf-sel" disabled>
+              <option value="">— select site and date first —</option>
             </select>
           </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);display:block;margin-bottom:.375rem">Date</label>
-            <input type="date" id="sfDate" onchange="sfLoadRoster()" style="width:100%;padding:.625rem .75rem;border:1px solid var(--br);border-radius:var(--r);background:var(--bg);font-size:13px;font-family:var(--fn);color:var(--ink)">
+          <div class="sf-fg">
+            <label>Shift requires</label>
+            <div class="sf-tr">
+              <div class="sf-tg" id="sfLock" onclick="sfToggle('lock')">Lock site</div>
+              <div class="sf-tg" id="sfUnlock" onclick="sfToggle('unlock')">Unlock site</div>
+            </div>
           </div>
+          <button class="sf-btn" id="sfFindBtn" onclick="sfFindCandidates()" disabled>Find available staff &rarr;</button>
         </div>
-        <div style="margin-bottom:.75rem">
-          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);display:block;margin-bottom:.375rem">Who can't make their shift?</label>
-          <select id="sfEmployee" style="width:100%;padding:.625rem .75rem;border:1px solid var(--br);border-radius:var(--r);background:var(--bg);font-size:13px;font-family:var(--fn);color:var(--ink)">
-            <option value="">Select site and date first</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
-          <button id="sfLock" onclick="sfToggle('lock')" style="padding:.5rem 1rem;border:1px solid var(--br);border-radius:var(--r);background:var(--bg);font-size:12px;cursor:pointer;font-family:var(--fn)">Lock site</button>
-          <button id="sfUnlock" onclick="sfToggle('unlock')" style="padding:.5rem 1rem;border:1px solid var(--br);border-radius:var(--r);background:var(--bg);font-size:12px;cursor:pointer;font-family:var(--fn)">Unlock site</button>
-        </div>
-        <button onclick="sfFindCandidates()" style="width:100%;padding:.875rem;background:var(--accent);border:none;border-radius:var(--r);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--fn)">Find available staff →</button>
+        <div class="sf-card" id="sfResults" style="display:none"></div>
       </div>
-      <div id="sfResults" style="margin-top:1rem"></div>
     </div>
   </div>
 </div>
@@ -409,7 +455,7 @@ function renderSites() {
       const todayOpenShifts = sd?.calendar?.[today]?.openShifts || [];
       for (let oi = 0; oi < Math.max(sd.openShifts||0, todayOpenShifts.length); oi++) {
         const os = todayOpenShifts[oi] || {};
-        const job = os.jobXRefCode ? os.jobXRefCode.replace(/_/g,' ') : 'Unfilled shift';
+        const job = os.jobXRefCode ? 'Unfilled shift - ' + os.jobXRefCode.replace(/_/g,' ') : 'Unfilled shift';
         const timeStr = os.timeStart ? `${fmtTime(os.timeStart)} – ${fmtTime(os.timeEnd)}` : '—';
         staffRows += `<tr class="open-row" onclick="sfGoFill('${site.xrefCode}','${today}')" style="cursor:pointer">
           <td style="color:var(--red);font-weight:500">⚠ ${job}</td>
@@ -560,35 +606,37 @@ function sfGoFill(site, date) {
 }
 
 // --- SHIFT FILL TAB ---
-let sfLockReq = false, sfUnlockReq = false;
+let sfLockReq = false, sfUnlockReq = false, sfSort = 'd';
 
 function sfInit() {
-  // Populate site dropdown with manager's sites
   const sel = document.getElementById('sfSite');
-  sel.innerHTML = '<option value="">Select site...</option>' +
+  sel.innerHTML = '<option value="">— select site —</option>' +
     manager.sites.map(s => `<option value="${s.xrefCode}">${s.name}</option>`).join('');
-  // Set date to today
   document.getElementById('sfDate').value = today;
-  document.getElementById('sfEmployee').innerHTML = '<option value="">Select site and date first</option>';
-  document.getElementById('sfResults').innerHTML = '';
+  document.getElementById('sfEmployee').innerHTML = '<option value="">— select site and date first —</option>';
+  document.getElementById('sfEmployee').disabled = true;
+  document.getElementById('sfFindBtn').disabled = true;
+  document.getElementById('sfResults').style.display = 'none';
+  sfLockReq = false; sfUnlockReq = false;
+  document.getElementById('sfLock').classList.remove('on');
+  document.getElementById('sfUnlock').classList.remove('on');
 }
 
 async function sfLoadRoster() {
   const site = document.getElementById('sfSite').value;
   const date = document.getElementById('sfDate').value;
   const empSel = document.getElementById('sfEmployee');
-  if (!site || !date) return;
+  const findBtn = document.getElementById('sfFindBtn');
+  if (!site || !date) { empSel.disabled = true; findBtn.disabled = true; return; }
+  empSel.disabled = false;
   empSel.innerHTML = '<option value="">Loading...</option>';
   try {
     const r = await fetch(`${SERVER}/scheduled?site=${encodeURIComponent(site)}&date=${encodeURIComponent(date)}`);
     const data = await r.json();
     const employees = data.employees || [];
-    if (employees.length === 0) {
-      empSel.innerHTML = '<option value="">No shifts scheduled</option>';
-    } else {
-      empSel.innerHTML = '<option value="">Select employee...</option>' +
-        employees.map(e => `<option value="${e.employeeNumber}">${e.displayName}</option>`).join('');
-    }
+    empSel.innerHTML = '<option value="">Nobody (shift unfilled)</option>' +
+      employees.map(e => `<option value="${e.employeeNumber}">${e.displayName}</option>`).join('');
+    findBtn.disabled = false;
   } catch(e) {
     empSel.innerHTML = '<option value="">Error loading roster</option>';
   }
@@ -597,22 +645,60 @@ async function sfLoadRoster() {
 function sfToggle(type) {
   if (type === 'lock') {
     sfLockReq = !sfLockReq;
-    document.getElementById('sfLock').style.background = sfLockReq ? 'var(--ink)' : 'var(--bg)';
-    document.getElementById('sfLock').style.color = sfLockReq ? 'var(--bg)' : 'var(--ink)';
+    document.getElementById('sfLock').classList.toggle('on', sfLockReq);
   } else {
     sfUnlockReq = !sfUnlockReq;
-    document.getElementById('sfUnlock').style.background = sfUnlockReq ? 'var(--ink)' : 'var(--bg)';
-    document.getElementById('sfUnlock').style.color = sfUnlockReq ? 'var(--bg)' : 'var(--ink)';
+    document.getElementById('sfUnlock').classList.toggle('on', sfUnlockReq);
   }
+}
+
+function sfAvatarClass(jobXRef) {
+  if (!jobXRef) return 'sf-a3';
+  const j = (jobXRef||'').toLowerCase();
+  if (j.includes('supervisor')) return 'sf-a1';
+  if (j.includes('level_3') || j.includes('level_4')) return 'sf-a2';
+  return 'sf-a3';
+}
+
+function sfDistBadge(d) {
+  if (d === null || d === undefined) return '<span class="sf-b sf-bd">? km</span>';
+  const k = d < 10 ? 'nr' : d < 30 ? 'md' : 'fr';
+  return `<span class="sf-b sf-bd ${k}">${d.toFixed(1)} km</span>`;
+}
+
+function sfRenderCandidates(candidates, site) {
+  if (candidates.length === 0) {
+    return '<div class="sf-empty">No available staff found for this shift.</div>';
+  }
+  return candidates.map(c => {
+    const initials = (c.displayName||'?').split(' ').filter(Boolean).map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    const avClass = sfAvatarClass(c.empJobAtSite);
+    const lockBadge = c.lock ? '<span class="sf-b sf-bl">Lock</span>' : '';
+    const unlockBadge = c.unlock ? '<span class="sf-b sf-bu">Unlock</span>' : '';
+    const primaryLoc = c.primaryLocation ? c.primaryLocation.replace(/^SEC_|^CLN_/,'').replace(/_SECURITY$/,'').replace(/_CLEANING$/,'').replace(/_/g,' ') : (c.primaryJobName || '');
+    const distBadge = sfDistBadge(c.distance);
+    const phone = c.phone ? `<a href="tel:${c.phone}">${c.phone}</a>` : '';
+    const jobMatch = c.jobMatch === 'exact' ? '' : '<span class="sf-b sf-bd" style="background:#fff3cd;color:#856404">Similar role</span>';
+    return `<div class="sf-cd">
+      <div class="sf-av ${avClass}">${initials}</div>
+      <div class="sf-ci">
+        <div class="sf-cn">${c.displayName}</div>
+        <div class="sf-cm">${primaryLoc}</div>
+        <div class="sf-bs">${distBadge}${lockBadge}${unlockBadge}${jobMatch}</div>
+        <div class="sf-cr">${phone ? phone : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 async function sfFindCandidates() {
   const site = document.getElementById('sfSite').value;
   const date = document.getElementById('sfDate').value;
   const empNo = document.getElementById('sfEmployee').value;
-  const results = document.getElementById('sfResults');
-  if (!site || !date) { results.innerHTML = '<div style="color:var(--red);font-size:13px">Please select a site and date.</div>'; return; }
-  results.innerHTML = '<div class="loading-state"><div class="spinner"></div>Finding available staff...</div>';
+  const resultsEl = document.getElementById('sfResults');
+  if (!site || !date) return;
+  resultsEl.style.display = 'block';
+  resultsEl.innerHTML = '<div style="text-align:center;padding:2rem;color:#6b6b68"><span class="spinner"></span> Finding available staff...</div>';
   try {
     let url = `${SERVER}/candidates?site=${encodeURIComponent(site)}&date=${encodeURIComponent(date)}`;
     if (empNo) url += `&absentXRefCode=${encodeURIComponent(empNo)}`;
@@ -621,31 +707,34 @@ async function sfFindCandidates() {
     const r = await fetch(url);
     const data = await r.json();
     const candidates = data.candidates || [];
-    if (candidates.length === 0) {
-      results.innerHTML = '<div style="font-size:13px;color:var(--ink3);padding:1rem 0">No available candidates found.</div>';
-      return;
-    }
-    results.innerHTML = `
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:.5rem">Available candidates (${candidates.length})</div>
-      ${candidates.map(c => {
-        const initials = (c.displayName||'?').split(' ').slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
-        const dist = c.distance ? c.distance.toFixed(1) + 'km' : '';
-        const phone = c.phone ? `<a href="tel:${c.phone}" style="color:var(--blue);text-decoration:none;font-family:var(--mono);font-size:12px">${c.phone}</a>` : '—';
-        const lockBadge = c.lock ? '<span style="font-size:9px;background:rgba(42,122,74,.12);color:var(--green);padding:1px 5px;border-radius:3px;margin-left:4px">Lock</span>' : '';
-        const unlockBadge = c.unlock ? '<span style="font-size:9px;background:rgba(26,74,138,.12);color:var(--blue);padding:1px 5px;border-radius:3px;margin-left:4px">Unlock</span>' : '';
-        const primaryLoc = c.primaryLocation ? c.primaryLocation.replace(/^SEC_|^CLN_/,'').replace(/_SECURITY$/,'').replace(/_CLEANING$/,'').replace(/_/g,' ') : '';
-        return `<div class="candidate-row">
-          <div class="cand-av">${initials}</div>
-          <div class="cand-info">
-            <div class="cand-name">${c.displayName}${lockBadge}${unlockBadge}</div>
-            <div class="cand-detail">${primaryLoc}${dist ? ' · ' + dist : ''}</div>
-          </div>
-          <div>${phone}</div>
-        </div>`;
-      }).join('')}`;
+    resultsEl.innerHTML = `
+      <div class="sf-rh">
+        <div class="sf-st" style="margin-bottom:0">Suggested staff</div>
+        <div class="sf-rc">${candidates.length} available</div>
+      </div>
+      <div class="sf-sr">
+        <span class="sf-sl">Sort:</span>
+        <button class="sf-sb on" id="sfSortD" onclick="sfSetSort('d')">Nearest first</button>
+        <button class="sf-sb" id="sfSortJ" onclick="sfSetSort('j')">Job match</button>
+      </div>
+      <div id="sfCandList">${sfRenderCandidates(candidates, site)}</div>`;
+    resultsEl._candidates = candidates;
+    resultsEl._site = site;
   } catch(e) {
-    results.innerHTML = `<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;
+    resultsEl.innerHTML = `<div style="color:#a32d2d;font-size:13px;padding:1rem">Error: ${e.message}</div>`;
   }
+}
+
+function sfSetSort(s) {
+  sfSort = s;
+  document.getElementById('sfSortD').classList.toggle('on', s === 'd');
+  document.getElementById('sfSortJ').classList.toggle('on', s === 'j');
+  const resultsEl = document.getElementById('sfResults');
+  if (!resultsEl._candidates) return;
+  let sorted = [...resultsEl._candidates];
+  if (s === 'd') sorted.sort((a,b) => (a.distance??999) - (b.distance??999));
+  else sorted.sort((a,b) => (a.jobMatch==='exact'?0:1) - (b.jobMatch==='exact'?0:1));
+  document.getElementById('sfCandList').innerHTML = sfRenderCandidates(sorted, resultsEl._site);
 }
 
 function toggleSite(x) {
