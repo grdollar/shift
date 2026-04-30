@@ -85,6 +85,18 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
 .cal-day.grey{background:rgba(26,24,20,.06);color:var(--ink3)}
 .cal-day.today{outline:2px solid var(--ink);outline-offset:-2px}
 
+.view-tabs{display:flex;gap:.5rem;margin-bottom:.875rem}
+.vtab{padding:.4rem .875rem;font-size:12px;font-weight:500;border:1px solid var(--br);border-radius:4px;background:var(--bg2);color:var(--ink2);cursor:pointer;font-family:var(--fn)}
+.vtab.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cal-table{width:100%;border-collapse:collapse;font-size:11px}
+.cal-table th{padding:.375rem .5rem;text-align:center;background:var(--bg3);border:1px solid var(--br);font-weight:600;white-space:nowrap}
+.cal-table th.site-th{text-align:left;min-width:160px}
+.cal-table td{padding:.375rem .5rem;border:1px solid var(--br);text-align:center;white-space:nowrap}
+.cal-table td.site-td{text-align:left;font-weight:500;font-size:12px}
+.cal-cell-green{background:rgba(42,122,74,.15);color:var(--green)}
+.cal-cell-red{background:rgba(196,57,26,.15);color:var(--red)}
+.cal-cell-grey{color:var(--ink3)}
+.cal-cell-today{outline:2px solid var(--ink);outline-offset:-2px}
 .spinner{width:22px;height:22px;border:2px solid var(--br);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto .75rem}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-state{text-align:center;padding:2rem;color:var(--ink3);font-size:13px}
@@ -118,10 +130,23 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
       <div class="sum-card"><div class="sum-val red" id="sumRed">—</div><div class="sum-label">Understaffed</div></div>
       <div class="sum-card"><div class="sum-val blue" id="sumTotal">—</div><div class="sum-label">Sites</div></div>
     </div>
+    <div class="view-tabs">
+      <button class="vtab active" id="tabSites" onclick="setTab('sites')">Sites</button>
+      <button class="vtab" id="tabCalendar" onclick="setTab('calendar')">Calendar</button>
+    </div>
     <div class="progress-label" id="progressLabel" style="display:none"></div>
     <div class="progress-bar" id="progressBar" style="display:none"><div class="progress-fill" id="progressFill"></div></div>
     <div class="loading-state" id="loadingState"><div class="spinner"></div>Loading...</div>
-    <div class="site-grid" id="siteGrid"></div>
+    <div class="site-grid" id="siteGrid" style="display:flex;flex-direction:column;gap:.5rem"></div>
+  </div>
+</div>
+
+    <!-- CALENDAR VIEW -->
+    <div id="calendarView" style="display:none">
+      <div style="overflow-x:auto">
+        <table class="cal-table" id="calTable"></table>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -349,6 +374,46 @@ function renderSites() {
       </div>
     </div>`;
   }).join('');
+}
+
+function setTab(tab) {
+  document.getElementById('tabSites').classList.toggle('active', tab === 'sites');
+  document.getElementById('tabCalendar').classList.toggle('active', tab === 'calendar');
+  document.getElementById('siteGrid').style.display = tab === 'sites' ? 'flex' : 'none';
+  document.getElementById('calendarView').style.display = tab === 'calendar' ? 'block' : 'none';
+  if (tab === 'calendar') renderCalendar();
+}
+
+function renderCalendar() {
+  const table = document.getElementById('calTable');
+  const dates = Array.from({length:28}, (_,i) => getBrisDate(i));
+
+  // Header row
+  const headCells = dates.map((d,i) => {
+    const date = new Date(d+'T00:00:00');
+    const day = date.toLocaleDateString('en-AU',{weekday:'narrow',timeZone:'Australia/Brisbane'});
+    const num = parseInt(d.split('-')[2]);
+    return `<th${i===0?' class="cal-cell-today"':''}>${day}<br>${num}</th>`;
+  }).join('');
+  
+  const rows = manager.sites.map(site => {
+    const sd = siteData[site.xrefCode];
+    const name = site.name.replace(' - Security','').replace(' Security','').replace(' - Cleaning','').replace(' Cleaning','');
+    const cells = dates.map((d,i) => {
+      const cal = sd?.calendar?.[d];
+      let cls = 'cal-cell-grey', text = '—';
+      if (cal) {
+        if (cal.open > 0) { cls = 'cal-cell-red'; text = cal.open + ' open'; }
+        else if (cal.assigned > 0) { cls = 'cal-cell-green'; text = cal.assigned; }
+      }
+      return `<td class="${cls}${i===0?' cal-cell-today':''}">${text}</td>`;
+    }).join('');
+    return `<tr><td class="site-td">${name}</td>${cells}</tr>`;
+  }).join('');
+
+  table.innerHTML = `
+    <thead><tr><th class="site-th">Site</th>${headCells}</tr></thead>
+    <tbody>${rows}</tbody>`;
 }
 
 function toggleSite(x) {
