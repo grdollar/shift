@@ -356,9 +356,12 @@ function renderSites() {
         const shiftTime = emp.shiftStart
           ? `${fmtTime(emp.shiftStart)} – ${fmtTime(emp.shiftEnd)}`
           : '—';
+        const shiftStarted = emp.shiftStart && new Date(emp.shiftStart) <= new Date();
         const punchIn = emp.clockInTime
           ? `<span class="punch-in">✓ ${fmtTime(emp.clockInTime)}</span>`
-          : `<span class="not-in">Not in</span>`;
+          : shiftStarted
+            ? `<span class="not-in" style="color:var(--red);font-weight:600">NOT IN</span>`
+            : `<span style="color:var(--ink3)">Relax</span>`;
         const punchOut = emp.clockOutTime
           ? `<span class="punch-in">✓ ${fmtTime(emp.clockOutTime)}</span>`
           : `<span class="not-in">—</span>`;
