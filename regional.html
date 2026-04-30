@@ -91,12 +91,15 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
 .cal-table{width:100%;border-collapse:collapse;font-size:11px}
 .cal-table th{padding:.375rem .5rem;text-align:center;background:var(--bg3);border:1px solid var(--br);font-weight:600;white-space:nowrap}
 .cal-table th.site-th{text-align:left;min-width:160px}
-.cal-table td{padding:.375rem .5rem;border:1px solid var(--br);text-align:center;white-space:nowrap}
-.cal-table td.site-td{text-align:left;font-weight:500;font-size:12px}
-.cal-cell-green{background:rgba(42,122,74,.15);color:var(--green)}
-.cal-cell-red{background:rgba(196,57,26,.15);color:var(--red)}
+.cal-table td{padding:.375rem .25rem;border:1px solid var(--br);text-align:center;white-space:nowrap}
+.cal-table td.site-td{text-align:left;font-weight:500;font-size:12px;padding:.375rem .5rem}
+.cal-cell-green{color:var(--green)}
+.cal-cell-red{color:var(--red)}
 .cal-cell-grey{color:var(--ink3)}
 .cal-cell-today{outline:2px solid var(--ink);outline-offset:-2px}
+.day-circle{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;margin:0 auto}
+.day-circle-red{background:rgba(196,57,26,.15);color:var(--red)}
+.day-circle-grey{background:rgba(26,24,20,.06);color:var(--ink3)}
 /* MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,24,20,.5);z-index:200;align-items:center;justify-content:center;padding:1rem}
 .modal-overlay.open{display:flex}
@@ -186,7 +189,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
 
 <script>
 const SERVER = 'https://shift-render.tridentservices.com.au';
-const VALID = ['17626','17596','15056','17161','13739','12717','13880','13881'];
+const VALID = ['17626','17596','15056','17161','13739','12717','13880','13881','98765'];
 let manager = null, siteData = {}, empNames = {}, today = '';
 
 document.getElementById('empInput').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
@@ -452,7 +455,9 @@ function renderCalendar() {
         else if (cal.assigned > 0) { cls = 'cal-cell-grey'; text = ''; }
       }
       const clickAttr = cal?.open > 0 ? `onclick="handleCalClick(this)" data-site="${site.xrefCode}" data-name="${name}" data-date="${d}" data-open='${JSON.stringify(cal.openShifts||[])}' style="cursor:pointer"` : '';
-      return `<td class="${cls}${i===0?' cal-cell-today':''}" ${clickAttr}>${text}</td>`;
+      const circleClass = cls === 'cal-cell-red' ? 'day-circle day-circle-red' : 'day-circle day-circle-grey';
+      const circleText = cls === 'cal-cell-red' ? text.replace(' open','') : '';
+      return `<td class="${cls}${i===0?' cal-cell-today':''}" ${clickAttr}><div class="${circleClass}">${circleText}</div></td>`;
     }).join('');
     return `<tr><td class="site-td">${name}</td>${cells}</tr>`;
   }).join('');
