@@ -466,3 +466,83 @@ function renderCalendar() {
       ${rows}
   </div>`;
 }
+function handleCalClick(el) {
+  const site = el.dataset.site;
+  const name = el.dataset.name;
+  const date = el.dataset.date;
+  const openShifts = JSON.parse(el.dataset.open || '[]');
+  openUnfilledShift(site, name, date, openShifts);
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('shiftModal')) {
+    document.getElementById('shiftModal').classList.remove('open');
+  }
+}
+
+async function openUnfilledShift(site, siteName, date, openShifts) {
+  const modal = document.getElementById('shiftModal');
+  const title = document.getElementById('modalTitle');
+  const sub = document.getElementById('modalSub');
+  const body = document.getElementById('modalBody');
+
+  title.textContent = siteName;
+  sub.textContent = fmtDate(date) + ' · ' + openShifts.length + ' unfilled shift' + (openShifts.length !== 1 ? 's' : '');
+  body.innerHTML = '<div class="modal-loading"><div class="spinner" style="margin:0 auto .5rem"></div>Loading candidates...</div>';
+  modal.classList.add('open');
+
+  try {
+    const jobXRefCode = openShifts[0]?.jobXRefCode || '';
+    const url = `${SERVER}/candidates?site=${encodeURIComponent(site)}&date=${encodeURIComponent(date)}${jobXRefCode ? '&jobXRefCode=' + encodeURIComponent(jobXRefCode) : ''}`;
+    const r = await fetch(url);
+    const data = await r.json();
+
+    if (!r.ok || data.error) {
+      body.innerHTML = `<div class="modal-loading">Failed to load candidates: ${data.error || 'Unknown error'}</div>`;
+      return;
+    }
+
+    const candidates = data.candidates || [];
+
+    const shiftsHtml = openShifts.map(s => `
+      <div class="shift-badge">${s.jobXRefCode ? s.jobXRefCode.replace(/_/g,' ') : 'Unfilled shift'}</div>
+    `).join('');
+
+    const candsHtml = candidates.length === 0
+      ? '<div style="font-size:13px;color:var(--ink3);padding:.5rem 0">No available candidates found</div>'
+      : candidates.map(c => {
+          const initials = (c.displayName||'?').split(' ').slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
+          const dist = c.distance ? c.distance.toFixed(1) + 'km away' : '';
+          const phone = c.phone ? `<a href="tel:${c.phone}">${c.phone}</a>` : '—';
+          return `<div class="candidate-row">
+            <div class="cand-av">${initials}</div>
+            <div class="cand-info">
+              <div class="cand-name">${c.displayName}</div>
+              <div class="cand-detail">${c.primaryJobName || ''} ${dist ? '· ' + dist : ''}</div>
+            </div>
+            <div class="cand-phone">${phone}</div>
+          </div>`;
+        }).join('');
+
+    body.innerHTML = `
+      <div class="modal-section">
+        <div class="modal-section-title">Unfilled shifts</div>
+        ${shiftsHtml}
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Available candidates (${candidates.length})</div>
+        ${candsHtml}
+      </div>`;
+
+  } catch(e) {
+    body.innerHTML = `<div class="modal-loading">Error: ${e.message}</div>`;
+  }
+}
+
+function toggleSite(x) {
+  const el = document.getElementById('sb-'+x.replace(/\W/g,'_'));
+  if (el) el.classList.toggle('open');
+}
+</script>
+</body>
+</html>
