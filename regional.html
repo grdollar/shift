@@ -156,6 +156,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
     <div class="view-tabs">
       <button class="vtab active" id="tabSites" onclick="setTab('sites')">Sites</button>
       <button class="vtab" id="tabCalendar" onclick="setTab('calendar')">Calendar</button>
+      <button class="vtab" id="tabShift" onclick="setTab('shift')">Find Cover</button>
     </div>
     <div class="progress-label" id="progressLabel" style="display:none"></div>
     <div class="progress-bar" id="progressBar" style="display:none"><div class="progress-fill" id="progressFill"></div></div>
@@ -163,6 +164,36 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
     <div class="site-grid" id="siteGrid" style="display:flex;flex-direction:column;gap:.5rem"></div>
     <!-- CALENDAR VIEW -->
     <div id="calendarView" style="display:none;padding:.5rem 0"></div>
+
+    <!-- SHIFT FILL VIEW -->
+    <div id="shiftFillView" style="display:none">
+      <div style="background:var(--bg2);border:1px solid var(--br);border-radius:var(--r);padding:1.25rem;max-width:600px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem">
+          <div>
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);display:block;margin-bottom:.375rem">Site</label>
+            <select id="sfSite" onchange="sfLoadRoster()" style="width:100%;padding:.625rem .75rem;border:1px solid var(--br);border-radius:var(--r);background:var(--bg);font-size:13px;font-family:var(--fn);color:var(--ink)">
+              <option value="">Select site...</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);display:block;margin-bottom:.375rem">Date</label>
+            <input type="date" id="sfDate" onchange="sfLoadRoster()" style="width:100%;padding:.625rem .75rem;border:1px solid var(--br);border-radius:var(--r);background:var(--bg);font-size:13px;font-family:var(--fn);color:var(--ink)">
+          </div>
+        </div>
+        <div style="margin-bottom:.75rem">
+          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);display:block;margin-bottom:.375rem">Who can't make their shift?</label>
+          <select id="sfEmployee" style="width:100%;padding:.625rem .75rem;border:1px solid var(--br);border-radius:var(--r);background:var(--bg);font-size:13px;font-family:var(--fn);color:var(--ink)">
+            <option value="">Select site and date first</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
+          <button id="sfLock" onclick="sfToggle('lock')" style="padding:.5rem 1rem;border:1px solid var(--br);border-radius:var(--r);background:var(--bg);font-size:12px;cursor:pointer;font-family:var(--fn)">Lock site</button>
+          <button id="sfUnlock" onclick="sfToggle('unlock')" style="padding:.5rem 1rem;border:1px solid var(--br);border-radius:var(--r);background:var(--bg);font-size:12px;cursor:pointer;font-family:var(--fn)">Unlock site</button>
+        </div>
+        <button onclick="sfFindCandidates()" style="width:100%;padding:.875rem;background:var(--accent);border:none;border-radius:var(--r);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--fn)">Find available staff →</button>
+      </div>
+      <div id="sfResults" style="margin-top:1rem"></div>
+    </div>
   </div>
 </div>
 
@@ -422,9 +453,12 @@ function renderSites() {
 function setTab(tab) {
   document.getElementById('tabSites').classList.toggle('active', tab === 'sites');
   document.getElementById('tabCalendar').classList.toggle('active', tab === 'calendar');
+  document.getElementById('tabShift').classList.toggle('active', tab === 'shift');
   document.getElementById('siteGrid').style.display = tab === 'sites' ? 'flex' : 'none';
   document.getElementById('calendarView').style.display = tab === 'calendar' ? 'block' : 'none';
+  document.getElementById('shiftFillView').style.display = tab === 'shift' ? 'block' : 'none';
   if (tab === 'calendar') renderCalendar();
+  if (tab === 'shift') sfInit();
 }
 
 function renderCalendar() {
@@ -548,6 +582,95 @@ async function openUnfilledShift(site, siteName, date, openShifts) {
 
   } catch(e) {
     body.innerHTML = `<div class="modal-loading">Error: ${e.message}</div>`;
+  }
+}
+
+// --- SHIFT FILL TAB ---
+let sfLockReq = false, sfUnlockReq = false;
+
+function sfInit() {
+  // Populate site dropdown with manager's sites
+  const sel = document.getElementById('sfSite');
+  sel.innerHTML = '<option value="">Select site...</option>' +
+    manager.sites.map(s => `<option value="${s.xrefCode}">${s.name}</option>`).join('');
+  // Set date to today
+  document.getElementById('sfDate').value = today;
+  document.getElementById('sfEmployee').innerHTML = '<option value="">Select site and date first</option>';
+  document.getElementById('sfResults').innerHTML = '';
+}
+
+async function sfLoadRoster() {
+  const site = document.getElementById('sfSite').value;
+  const date = document.getElementById('sfDate').value;
+  const empSel = document.getElementById('sfEmployee');
+  if (!site || !date) return;
+  empSel.innerHTML = '<option value="">Loading...</option>';
+  try {
+    const r = await fetch(`${SERVER}/scheduled?site=${encodeURIComponent(site)}&date=${encodeURIComponent(date)}`);
+    const data = await r.json();
+    const employees = data.employees || [];
+    if (employees.length === 0) {
+      empSel.innerHTML = '<option value="">No shifts scheduled</option>';
+    } else {
+      empSel.innerHTML = '<option value="">Select employee...</option>' +
+        employees.map(e => `<option value="${e.employeeNumber}">${e.displayName}</option>`).join('');
+    }
+  } catch(e) {
+    empSel.innerHTML = '<option value="">Error loading roster</option>';
+  }
+}
+
+function sfToggle(type) {
+  if (type === 'lock') {
+    sfLockReq = !sfLockReq;
+    document.getElementById('sfLock').style.background = sfLockReq ? 'var(--ink)' : 'var(--bg)';
+    document.getElementById('sfLock').style.color = sfLockReq ? 'var(--bg)' : 'var(--ink)';
+  } else {
+    sfUnlockReq = !sfUnlockReq;
+    document.getElementById('sfUnlock').style.background = sfUnlockReq ? 'var(--ink)' : 'var(--bg)';
+    document.getElementById('sfUnlock').style.color = sfUnlockReq ? 'var(--bg)' : 'var(--ink)';
+  }
+}
+
+async function sfFindCandidates() {
+  const site = document.getElementById('sfSite').value;
+  const date = document.getElementById('sfDate').value;
+  const empNo = document.getElementById('sfEmployee').value;
+  const results = document.getElementById('sfResults');
+  if (!site || !date) { results.innerHTML = '<div style="color:var(--red);font-size:13px">Please select a site and date.</div>'; return; }
+  results.innerHTML = '<div class="loading-state"><div class="spinner"></div>Finding available staff...</div>';
+  try {
+    let url = `${SERVER}/candidates?site=${encodeURIComponent(site)}&date=${encodeURIComponent(date)}`;
+    if (empNo) url += `&absentXRefCode=${encodeURIComponent(empNo)}`;
+    if (sfLockReq) url += '&requiresLock=true';
+    if (sfUnlockReq) url += '&requiresUnlock=true';
+    const r = await fetch(url);
+    const data = await r.json();
+    const candidates = data.candidates || [];
+    if (candidates.length === 0) {
+      results.innerHTML = '<div style="font-size:13px;color:var(--ink3);padding:1rem 0">No available candidates found.</div>';
+      return;
+    }
+    results.innerHTML = `
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:.5rem">Available candidates (${candidates.length})</div>
+      ${candidates.map(c => {
+        const initials = (c.displayName||'?').split(' ').slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
+        const dist = c.distance ? c.distance.toFixed(1) + 'km' : '';
+        const phone = c.phone ? `<a href="tel:${c.phone}" style="color:var(--blue);text-decoration:none;font-family:var(--mono);font-size:12px">${c.phone}</a>` : '—';
+        const lockBadge = c.lock ? '<span style="font-size:9px;background:rgba(42,122,74,.12);color:var(--green);padding:1px 5px;border-radius:3px;margin-left:4px">Lock</span>' : '';
+        const unlockBadge = c.unlock ? '<span style="font-size:9px;background:rgba(26,74,138,.12);color:var(--blue);padding:1px 5px;border-radius:3px;margin-left:4px">Unlock</span>' : '';
+        const primaryLoc = c.primaryLocation ? c.primaryLocation.replace(/^SEC_|^CLN_/,'').replace(/_SECURITY$/,'').replace(/_CLEANING$/,'').replace(/_/g,' ') : '';
+        return `<div class="candidate-row">
+          <div class="cand-av">${initials}</div>
+          <div class="cand-info">
+            <div class="cand-name">${c.displayName}${lockBadge}${unlockBadge}</div>
+            <div class="cand-detail">${primaryLoc}${dist ? ' · ' + dist : ''}</div>
+          </div>
+          <div>${phone}</div>
+        </div>`;
+      }).join('')}`;
+  } catch(e) {
+    results.innerHTML = `<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;
   }
 }
 
