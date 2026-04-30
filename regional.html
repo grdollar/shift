@@ -443,7 +443,7 @@ function renderCalendar() {
         if (cal.open > 0) { cls = 'cal-cell-red'; text = cal.open + ' open'; }
         else if (cal.assigned > 0) { cls = 'cal-cell-green'; text = cal.assigned; }
       }
-      const clickAttr = cal?.open > 0 ? `onclick="openUnfilledShift('${site.xrefCode}','${name}','${d}',${JSON.stringify(cal.openShifts||[])})" style="cursor:pointer"` : '';
+      const clickAttr = cal?.open > 0 ? `onclick="handleCalClick(this)" data-site="${site.xrefCode}" data-name="${name}" data-date="${d}" data-open='${JSON.stringify(cal.openShifts||[])}' style="cursor:pointer"` : '';
       return `<td class="${cls}${i===0?' cal-cell-today':''}" ${clickAttr}>${text}</td>`;
     }).join('');
     return `<tr><td class="site-td">${name}</td>${cells}</tr>`;
@@ -452,6 +452,14 @@ function renderCalendar() {
   table.innerHTML = `
     <thead><tr><th class="site-th">Site</th>${headCells}</tr></thead>
     <tbody>${rows}</tbody>`;
+}
+
+function handleCalClick(el) {
+  const site = el.dataset.site;
+  const name = el.dataset.name;
+  const date = el.dataset.date;
+  const openShifts = JSON.parse(el.dataset.open || '[]');
+  openUnfilledShift(site, name, date, openShifts);
 }
 
 function closeModal(e) {
