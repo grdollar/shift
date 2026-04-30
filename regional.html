@@ -360,7 +360,10 @@ function renderSites() {
           : shiftStarted
             ? `<span class="not-in" style="color:var(--red);font-weight:600">NOT IN</span>`
             : `<span style="color:var(--ink3)">Relax</span>`;
-        const punchOut = emp.clockOutTime
+        // Only show clock-out if it happened after clock-in
+        const validOut = emp.clockOutTime && emp.clockInTime && 
+          new Date(emp.clockOutTime) > new Date(emp.clockInTime);
+        const punchOut = validOut
           ? `<span class="punch-in">✓ ${fmtTime(emp.clockOutTime)}</span>`
           : `<span class="not-in">—</span>`;
         staffRows += `<tr>
