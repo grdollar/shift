@@ -155,7 +155,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
     </div>
     <div class="view-tabs">
       <button class="vtab active" id="tabSites" onclick="setTab('sites')">Sites</button>
-      <button class="vtab" id="tabCalendar" onclick="setTab('calendar')">Calendar</button>
+      <button class="vtab" id="tabCalendar" onclick="setTab('calendar')">Unfilled Shifts</button>
       <button class="vtab" id="tabShift" onclick="setTab('shift')">Find Cover</button>
     </div>
     <div class="progress-label" id="progressLabel" style="display:none"></div>
@@ -405,12 +405,16 @@ function renderSites() {
         </tr>`;
       });
       // Open/unfilled shifts
-      for (let i = 0; i < (sd.openShifts||0); i++) {
-        staffRows += `<tr class="open-row">
-          <td>⚠ Unfilled shift</td>
-          <td>—</td>
-          <td>—</td>
-          <td>—</td>
+      // Open/unfilled shifts
+      const todayOpenShifts = sd?.calendar?.[today]?.openShifts || [];
+      for (let oi = 0; oi < Math.max(sd.openShifts||0, todayOpenShifts.length); oi++) {
+        const os = todayOpenShifts[oi] || {};
+        const job = os.jobXRefCode ? os.jobXRefCode.replace(/_/g,' ') : 'Unfilled shift';
+        const timeStr = os.timeStart ? `${fmtTime(os.timeStart)} – ${fmtTime(os.timeEnd)}` : '—';
+        staffRows += `<tr class="open-row" onclick="sfGoFill('${site.xrefCode}','${today}')" style="cursor:pointer">
+          <td style="color:var(--red);font-weight:500">⚠ ${job}</td>
+          <td style="font-family:var(--mono);font-size:11px">${timeStr}</td>
+          <td colspan="2" style="color:var(--ink3);font-size:11px">Click to find cover →</td>
         </tr>`;
       }
     }
@@ -517,7 +521,7 @@ function closeModal(e) {
   }
 }
 
-async function openUnfilledShift(site, siteName, date, openShifts) {
+function openUnfilledShift(site, siteName, date, openShifts) {
   const modal = document.getElementById('shiftModal');
   const title = document.getElementById('modalTitle');
   const sub = document.getElementById('modalSub');
@@ -525,64 +529,34 @@ async function openUnfilledShift(site, siteName, date, openShifts) {
 
   title.textContent = siteName;
   sub.textContent = fmtDate(date) + ' · ' + openShifts.length + ' unfilled shift' + (openShifts.length !== 1 ? 's' : '');
-  body.innerHTML = '<div class="modal-loading"><div class="spinner" style="margin:0 auto .5rem"></div>Loading candidates...</div>';
   modal.classList.add('open');
 
-  try {
-    const jobXRefCode = openShifts[0]?.jobXRefCode || '';
-    const url = `${SERVER}/candidates?site=${encodeURIComponent(site)}&date=${encodeURIComponent(date)}${jobXRefCode ? '&jobXRefCode=' + encodeURIComponent(jobXRefCode) : ''}`;
-    const r = await fetch(url);
-    const data = await r.json();
+  const shiftsHtml = openShifts.map(s => {
+    const timeStr = s.timeStart ? `${fmtTime(s.timeStart)} – ${fmtTime(s.timeEnd)}` : '';
+    const job = s.jobXRefCode ? s.jobXRefCode.replace(/_/g,' ') : 'Unfilled shift';
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--br)">
+      <div style="font-size:12px;font-weight:500;min-width:180px">${job}</div>
+      <div style="font-family:var(--mono);font-size:12px;color:var(--ink2)">${timeStr}</div>
+    </div>`;
+  }).join('');
 
-    if (!r.ok || data.error) {
-      body.innerHTML = `<div class="modal-loading">Failed to load candidates: ${data.error || 'Unknown error'}</div>`;
-      return;
-    }
+  body.innerHTML = `
+    <div class="modal-section">
+      <div class="modal-section-title">Unfilled shifts</div>
+      ${shiftsHtml}
+    </div>
+    <button onclick="sfGoFill('${site}','${date}')" style="width:100%;margin-top:1rem;padding:.875rem;background:var(--accent);border:none;border-radius:var(--r);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--fn)">Fill shift →</button>`;
+}
 
-    const candidates = data.candidates || [];
-
-    const shiftsHtml = openShifts.map(s => {
-      const timeStr = s.timeStart ? `${fmtTime(s.timeStart)} – ${fmtTime(s.timeEnd)}` : '';
-      const job = s.jobXRefCode ? s.jobXRefCode.replace(/_/g,' ') : 'Unfilled shift';
-      return `<div style="display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--br)">
-        <div style="font-size:12px;font-weight:500;min-width:180px">${job}</div>
-        <div style="font-family:var(--mono);font-size:12px;color:var(--ink2)">${timeStr}</div>
-      </div>`;
-    }).join('');
-
-    const candsHtml = candidates.length === 0
-      ? '<div style="font-size:13px;color:var(--ink3);padding:.5rem 0">No available candidates found</div>'
-      : candidates.map(c => {
-          const initials = (c.displayName||'?').split(' ').slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
-          const dist = c.distance ? c.distance.toFixed(1) + 'km' : '';
-          const phone = c.phone ? `<a href="tel:${c.phone}">${c.phone}</a>` : '—';
-          const lockBadge = c.lock ? '<span style="font-size:9px;background:rgba(42,122,74,.12);color:var(--green);padding:1px 5px;border-radius:3px;margin-left:4px">Lock</span>' : '';
-          const unlockBadge = c.unlock ? '<span style="font-size:9px;background:rgba(26,74,138,.12);color:var(--blue);padding:1px 5px;border-radius:3px;margin-left:4px">Unlock</span>' : '';
-          const primaryLoc = c.primaryLocation ? c.primaryLocation.replace(/^SEC_|^CLN_/,'').replace(/_SECURITY$/,'').replace(/_CLEANING$/,'').replace(/_/g,' ') : '';
-          const distStr = c.distance ? c.distance.toFixed(1) + 'km' : '';
-          return `<div class="candidate-row">
-            <div class="cand-av">${initials}</div>
-            <div class="cand-info">
-              <div class="cand-name">${c.displayName}${lockBadge}${unlockBadge}</div>
-              <div class="cand-detail">${primaryLoc}${distStr ? ' · ' + distStr : ''}</div>
-            </div>
-            <div class="cand-phone">${phone}</div>
-          </div>`;
-        }).join('');
-
-    body.innerHTML = `
-      <div class="modal-section">
-        <div class="modal-section-title">Unfilled shifts</div>
-        ${shiftsHtml}
-      </div>
-      <div class="modal-section">
-        <div class="modal-section-title">Available candidates (${candidates.length})</div>
-        ${candsHtml}
-      </div>`;
-
-  } catch(e) {
-    body.innerHTML = `<div class="modal-loading">Error: ${e.message}</div>`;
-  }
+function sfGoFill(site, date) {
+  // Close modal
+  document.getElementById('shiftModal').classList.remove('open');
+  // Switch to Find Cover tab with site and date prepopulated
+  setTab('shift');
+  sfInit();
+  document.getElementById('sfSite').value = site;
+  document.getElementById('sfDate').value = date;
+  sfLoadRoster();
 }
 
 // --- SHIFT FILL TAB ---
