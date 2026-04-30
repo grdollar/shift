@@ -76,8 +76,8 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
 /* CALENDAR */
 .cal-section{padding:.875rem 1rem;border-top:1px solid var(--br)}
 .cal-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:.5rem}
-.cal-days{display:flex;flex-wrap:nowrap;gap:3px;overflow-x:auto}
-.cal-day{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-family:var(--mono);font-weight:600;cursor:default}
+.cal-days{display:flex;flex-wrap:nowrap;gap:4px}
+.cal-day{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--mono);font-weight:600;cursor:default;flex-shrink:0}
 .cal-day.green{background:rgba(42,122,74,.15);color:var(--green)}
 .cal-day.yellow{background:rgba(184,122,16,.15);color:var(--yellow)}
 .cal-day.red{background:rgba(196,57,26,.15);color:var(--red)}
@@ -397,7 +397,7 @@ function renderSites() {
         if (dd.open > 0) { cls='red'; title=`${fmtDate(d)}: ${dd.assigned} rostered, ${dd.open} unfilled`; }
         else if (dd.assigned > 0) { cls='green'; title=`${fmtDate(d)}: ${dd.assigned} rostered`; }
       }
-      return `<div class="cal-day ${cls}${i===0?' today':''}" title="${title}">${parseInt(d.split('-')[2])}</div>`;
+      return `<div class="cal-day ${cls}" title="${title}">${parseInt(d.split('-')[2])}</div>`;
     }).join('');
 
     return `<div class="site-card">
@@ -429,16 +429,13 @@ function renderCalendar() {
   const container = document.getElementById('calendarView');
   const dates = Array.from({length:28}, (_,i) => getBrisDate(i));
 
-  // Date header row
+  const SITE_COL = 170;
+
   const headerDots = dates.map((d,i) => {
     const parts = d.split('-');
     const label = `${parts[2]}/${parts[1]}`;
-    return `<div style="width:22px;text-align:center;font-size:8px;font-family:var(--mono);color:var(--ink3);flex-shrink:0${i===0?';font-weight:700;color:var(--ink)':''}">${label}</div>`;
+    return `<div style="width:28px;text-align:center;font-size:9px;font-family:var(--mono);color:var(--ink3);flex-shrink:0">${label}</div>`;
   }).join('');
-
-  const header = `<div style="display:flex;align-items:center;gap:3px;margin-bottom:.375rem;padding-left:160px">
-    ${headerDots}
-  </div>`;
 
   const rows = manager.sites.map(site => {
     const sd = siteData[site.xrefCode];
@@ -452,16 +449,24 @@ function renderCalendar() {
         text = cal.open;
         clickAttr = `onclick="handleCalClick(this)" data-site="${site.xrefCode}" data-name="${name}" data-date="${d}" data-open='${JSON.stringify(cal.openShifts||[])}' style="cursor:pointer"`;
       }
-      return `<div class="cal-day ${cls}${i===0?' today':''}" title="${fmtDate(d)}" ${clickAttr}>${text}</div>`;
+      return `<div class="cal-day ${cls}" title="${fmtDate(d)}" ${clickAttr}>${text}</div>`;
     }).join('');
 
-    return `<div style="display:flex;align-items:center;gap:3px;margin-bottom:4px">
-      <div style="width:160px;min-width:160px;font-size:12px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+      <div style="width:${SITE_COL}px;min-width:${SITE_COL}px;font-size:12px;font-weight:500;color:var(--ink)">${name}</div>
       <div class="cal-days">${dots}</div>
     </div>`;
   }).join('');
 
-  container.innerHTML = header + rows;
+  container.innerHTML = `<div style="overflow-x:auto">
+    <div style="min-width:fit-content">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--br)">
+        <div style="width:${SITE_COL}px;min-width:${SITE_COL}px"></div>
+        <div style="display:flex;gap:4px">${headerDots}</div>
+      </div>
+      ${rows}
+    </div>
+  </div>`;
 }
 
 function handleCalClick(el) {
