@@ -289,12 +289,14 @@ function getSiteStatus(xrefCode) {
   if (open > 0) return 'red';
   if (assigned === 0) return 'grey';
 
-  // Only count staff whose shift has started by now
+  // Only count staff whose shift is currently in progress
   const now = new Date();
   const shouldBeIn = (sd.assignedXrefs||[]).filter(xref => {
     const emp = sd.staffData?.[xref];
-    if (!emp?.shiftStart) return true; // no time data, assume should be in
-    return new Date(emp.shiftStart) <= now;
+    if (!emp?.shiftStart) return true;
+    const start = new Date(emp.shiftStart);
+    const end = emp.shiftEnd ? new Date(emp.shiftEnd) : null;
+    return start <= now && (!end || end > now);
   });
 
   if (shouldBeIn.length === 0) return 'green'; // no one should be in yet
@@ -325,12 +327,15 @@ function renderSites() {
     const open = sd?.openShifts || 0;
     const clockedIn = Object.values(sd?.staffData||{}).filter(s => s.clockInTime).length;
 
-    // Count who should be in right now
+    // Count who should be in right now (shift started AND not yet ended)
     const now = new Date();
     const shouldBeIn = (sd?.assignedXrefs||[]).filter(xref => {
       const emp = sd?.staffData?.[xref];
       if (!emp?.shiftStart) return true;
-      return new Date(emp.shiftStart) <= now;
+      const start = new Date(emp.shiftStart);
+      if (!emp.shiftEnd) return start <= now;
+      const end = new Date(emp.shiftEnd);
+      return start <= now && end > now;
     });
     const clockedInNow = shouldBeIn.filter(xref => sd?.staffData?.[xref]?.clockInTime).length;
 
@@ -438,10 +443,10 @@ function renderCalendar() {
     const name = site.name.replace(' - Security','').replace(' Security','').replace(' - Cleaning','').replace(' Cleaning','');
     const cells = dates.map((d,i) => {
       const cal = sd?.calendar?.[d];
-      let cls = 'cal-cell-grey', text = '—';
+      let cls = 'cal-cell-grey', text = '';
       if (cal) {
         if (cal.open > 0) { cls = 'cal-cell-red'; text = cal.open + ' open'; }
-        else if (cal.assigned > 0) { cls = 'cal-cell-green'; text = cal.assigned; }
+        else if (cal.assigned > 0) { cls = 'cal-cell-grey'; text = ''; }
       }
       const clickAttr = cal?.open > 0 ? `onclick="handleCalClick(this)" data-site="${site.xrefCode}" data-name="${name}" data-date="${d}" data-open='${JSON.stringify(cal.openShifts||[])}' style="cursor:pointer"` : '';
       return `<td class="${cls}${i===0?' cal-cell-today':''}" ${clickAttr}>${text}</td>`;
