@@ -507,9 +507,9 @@ async function openUnfilledShift(site, siteName, date, openShifts) {
     const shiftsHtml = openShifts.map(s => {
       const timeStr = s.timeStart ? `${fmtTime(s.timeStart)} – ${fmtTime(s.timeEnd)}` : '';
       const job = s.jobXRefCode ? s.jobXRefCode.replace(/_/g,' ') : 'Unfilled shift';
-      return `<div style="display:flex;align-items:center;gap:.5rem;padding:.375rem 0;border-bottom:1px solid var(--br);font-size:12px">
-        <div class="shift-badge">${job}</div>
-        ${timeStr ? `<div style="font-family:var(--mono);font-size:11px;color:var(--ink2)">${timeStr}</div>` : ''}
+      return `<div style="display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--br)">
+        <div style="font-size:12px;font-weight:500;min-width:180px">${job}</div>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--ink2)">${timeStr}</div>
       </div>`;
     }).join('');
 
@@ -519,14 +519,15 @@ async function openUnfilledShift(site, siteName, date, openShifts) {
           const initials = (c.displayName||'?').split(' ').slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
           const dist = c.distance ? c.distance.toFixed(1) + 'km' : '';
           const phone = c.phone ? `<a href="tel:${c.phone}">${c.phone}</a>` : '—';
-          const lockBadge = c.lock ? '<span style="font-size:10px;background:rgba(42,122,74,.12);color:var(--green);padding:1px 5px;border-radius:3px">Lock</span>' : '';
-          const unlockBadge = c.unlock ? '<span style="font-size:10px;background:rgba(26,74,138,.12);color:var(--blue);padding:1px 5px;border-radius:3px">Unlock</span>' : '';
-          const primaryLoc = c.primaryJobName || '';
+          const lockBadge = c.lock ? '<span style="font-size:9px;background:rgba(42,122,74,.12);color:var(--green);padding:1px 5px;border-radius:3px;margin-left:4px">Lock</span>' : '';
+          const unlockBadge = c.unlock ? '<span style="font-size:9px;background:rgba(26,74,138,.12);color:var(--blue);padding:1px 5px;border-radius:3px;margin-left:4px">Unlock</span>' : '';
+          const primaryLoc = c.primaryLocation ? c.primaryLocation.replace(/^SEC_|^CLN_/,'').replace(/_SECURITY$/,'').replace(/_CLEANING$/,'').replace(/_/g,' ') : '';
+          const distStr = c.distance ? c.distance.toFixed(1) + 'km' : '';
           return `<div class="candidate-row">
             <div class="cand-av">${initials}</div>
             <div class="cand-info">
-              <div class="cand-name">${c.displayName} ${lockBadge} ${unlockBadge}</div>
-              <div class="cand-detail">${primaryLoc}${dist ? ' · ' + dist : ''}</div>
+              <div class="cand-name">${c.displayName}${lockBadge}${unlockBadge}</div>
+              <div class="cand-detail">${primaryLoc}${distStr ? ' · ' + distStr : ''}</div>
             </div>
             <div class="cand-phone">${phone}</div>
           </div>`;
