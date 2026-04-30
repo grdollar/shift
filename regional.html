@@ -76,8 +76,8 @@ body{font-family:var(--fn);background:var(--bg);color:var(--ink);min-height:100v
 /* CALENDAR */
 .cal-section{padding:.875rem 1rem;border-top:1px solid var(--br)}
 .cal-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:.5rem}
-.cal-days{display:flex;flex-wrap:nowrap;gap:4px}
-.cal-day{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--mono);font-weight:600;cursor:default;flex-shrink:0}
+.cal-days{display:flex;flex-wrap:nowrap;gap:4px;flex:1}
+.cal-day{flex:1;min-width:0;aspect-ratio:1;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--mono);font-weight:600;cursor:default}
 .cal-day.green{background:rgba(42,122,74,.15);color:var(--green)}
 .cal-day.yellow{background:rgba(184,122,16,.15);color:var(--yellow)}
 .cal-day.red{background:rgba(196,57,26,.15);color:var(--red)}
@@ -434,7 +434,7 @@ function renderCalendar() {
   const headerDots = dates.map((d,i) => {
     const parts = d.split('-');
     const label = `${parts[2]}/${parts[1]}`;
-    return `<div style="width:28px;text-align:center;font-size:9px;font-family:var(--mono);color:var(--ink3);flex-shrink:0">${label}</div>`;
+    return `<div style="flex:1;min-width:0;text-align:center;font-size:9px;font-family:var(--mono);color:var(--ink3);overflow:hidden">${label}</div>`;
   }).join('');
 
   const rows = manager.sites.map(site => {
@@ -458,96 +458,11 @@ function renderCalendar() {
     </div>`;
   }).join('');
 
-  container.innerHTML = `<div style="overflow-x:auto">
-    <div style="min-width:fit-content">
+  container.innerHTML = `<div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--br)">
         <div style="width:${SITE_COL}px;min-width:${SITE_COL}px"></div>
-        <div style="display:flex;gap:4px">${headerDots}</div>
+        <div style="display:flex;gap:4px;flex:1">${headerDots}</div>
       </div>
       ${rows}
-    </div>
   </div>`;
 }
-
-function handleCalClick(el) {
-  const site = el.dataset.site;
-  const name = el.dataset.name;
-  const date = el.dataset.date;
-  const openShifts = JSON.parse(el.dataset.open || '[]');
-  openUnfilledShift(site, name, date, openShifts);
-}
-
-function closeModal(e) {
-  if (e.target === document.getElementById('shiftModal')) {
-    document.getElementById('shiftModal').classList.remove('open');
-  }
-}
-
-async function openUnfilledShift(site, siteName, date, openShifts) {
-  const modal = document.getElementById('shiftModal');
-  const title = document.getElementById('modalTitle');
-  const sub = document.getElementById('modalSub');
-  const body = document.getElementById('modalBody');
-
-  title.textContent = siteName;
-  sub.textContent = fmtDate(date) + ' · ' + openShifts.length + ' unfilled shift' + (openShifts.length !== 1 ? 's' : '');
-  body.innerHTML = '<div class="modal-loading"><div class="spinner" style="margin:0 auto .5rem"></div>Loading candidates...</div>';
-  modal.classList.add('open');
-
-  try {
-    const jobXRefCode = openShifts[0]?.jobXRefCode || '';
-    const url = `${SERVER}/candidates?site=${encodeURIComponent(site)}&date=${encodeURIComponent(date)}${jobXRefCode ? '&jobXRefCode=' + encodeURIComponent(jobXRefCode) : ''}`;
-    const r = await fetch(url);
-    const data = await r.json();
-
-    if (!r.ok || data.error) {
-      body.innerHTML = `<div class="modal-loading">Failed to load candidates: ${data.error || 'Unknown error'}</div>`;
-      return;
-    }
-
-    const candidates = data.candidates || [];
-
-    // Show unfilled shifts
-    const shiftsHtml = openShifts.map(s => `
-      <div class="shift-badge">${s.jobXRefCode ? s.jobXRefCode.replace(/_/g,' ') : 'Unfilled shift'}</div>
-    `).join('');
-
-    // Show candidates
-    const candsHtml = candidates.length === 0
-      ? '<div style="font-size:13px;color:var(--ink3);padding:.5rem 0">No available candidates found</div>'
-      : candidates.map(c => {
-          const initials = (c.displayName||'?').split(' ').slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
-          const dist = c.distance ? c.distance.toFixed(1) + 'km away' : '';
-          const phone = c.phone ? `<a href="tel:${c.phone}">${c.phone}</a>` : '—';
-          return `<div class="candidate-row">
-            <div class="cand-av">${initials}</div>
-            <div class="cand-info">
-              <div class="cand-name">${c.displayName}</div>
-              <div class="cand-detail">${c.primaryJobName || ''} ${dist ? '· ' + dist : ''}</div>
-            </div>
-            <div class="cand-phone">${phone}</div>
-          </div>`;
-        }).join('');
-
-    body.innerHTML = `
-      <div class="modal-section">
-        <div class="modal-section-title">Unfilled shifts</div>
-        ${shiftsHtml}
-      </div>
-      <div class="modal-section">
-        <div class="modal-section-title">Available candidates (${candidates.length})</div>
-        ${candsHtml}
-      </div>`;
-
-  } catch(e) {
-    body.innerHTML = `<div class="modal-loading">Error: ${e.message}</div>`;
-  }
-}
-
-function toggleSite(x) {
-  const el = document.getElementById('sb-'+x.replace(/\W/g,'_'));
-  if (el) el.classList.toggle('open');
-}
-</script>
-</body>
-</html>
