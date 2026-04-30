@@ -504,21 +504,29 @@ async function openUnfilledShift(site, siteName, date, openShifts) {
 
     const candidates = data.candidates || [];
 
-    const shiftsHtml = openShifts.map(s => `
-      <div class="shift-badge">${s.jobXRefCode ? s.jobXRefCode.replace(/_/g,' ') : 'Unfilled shift'}</div>
-    `).join('');
+    const shiftsHtml = openShifts.map(s => {
+      const timeStr = s.timeStart ? `${fmtTime(s.timeStart)} – ${fmtTime(s.timeEnd)}` : '';
+      const job = s.jobXRefCode ? s.jobXRefCode.replace(/_/g,' ') : 'Unfilled shift';
+      return `<div style="display:flex;align-items:center;gap:.5rem;padding:.375rem 0;border-bottom:1px solid var(--br);font-size:12px">
+        <div class="shift-badge">${job}</div>
+        ${timeStr ? `<div style="font-family:var(--mono);font-size:11px;color:var(--ink2)">${timeStr}</div>` : ''}
+      </div>`;
+    }).join('');
 
     const candsHtml = candidates.length === 0
       ? '<div style="font-size:13px;color:var(--ink3);padding:.5rem 0">No available candidates found</div>'
       : candidates.map(c => {
           const initials = (c.displayName||'?').split(' ').slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
-          const dist = c.distance ? c.distance.toFixed(1) + 'km away' : '';
+          const dist = c.distance ? c.distance.toFixed(1) + 'km' : '';
           const phone = c.phone ? `<a href="tel:${c.phone}">${c.phone}</a>` : '—';
+          const lockBadge = c.lock ? '<span style="font-size:10px;background:rgba(42,122,74,.12);color:var(--green);padding:1px 5px;border-radius:3px">Lock</span>' : '';
+          const unlockBadge = c.unlock ? '<span style="font-size:10px;background:rgba(26,74,138,.12);color:var(--blue);padding:1px 5px;border-radius:3px">Unlock</span>' : '';
+          const primaryLoc = c.primaryJobName || '';
           return `<div class="candidate-row">
             <div class="cand-av">${initials}</div>
             <div class="cand-info">
-              <div class="cand-name">${c.displayName}</div>
-              <div class="cand-detail">${c.primaryJobName || ''} ${dist ? '· ' + dist : ''}</div>
+              <div class="cand-name">${c.displayName} ${lockBadge} ${unlockBadge}</div>
+              <div class="cand-detail">${primaryLoc}${dist ? ' · ' + dist : ''}</div>
             </div>
             <div class="cand-phone">${phone}</div>
           </div>`;
